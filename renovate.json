@@ -1,9 +1,13 @@
 {
   "groupName": "all dependencies",
+  "platform": "github",
   "groupSlug": "all",
   "lockFileMaintenance": {
     "enabled": false
   },
+  "repositories": [
+    "rabobank/shadow-tool"
+  ],
   "packageRules": [
     {
       "groupName": "all dependencies",
