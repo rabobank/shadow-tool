@@ -1,0 +1,11 @@
+{
+  "groupName": "dependencies",
+  "groupSlug": "all",
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "repositories": [
+    "rabobank/shadow-tool"
+  ],
+  "separateMajorMinor": false
+}
