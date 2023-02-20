@@ -14,7 +14,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
-        <javers-core.version>6.9.1</javers-core.version>
+        <javers-core.version>6.11.0</javers-core.version>
         <junit-jupiter-engine.version>5.9.2</junit-jupiter-engine.version>
         <logback-classic.version>1.4.5</logback-classic.version>
         <mockito-core.version>5.1.1</mockito-core.version>
