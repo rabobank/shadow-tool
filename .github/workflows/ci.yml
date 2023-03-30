@@ -6,7 +6,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build_and_test:
+  Build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -16,11 +16,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Cache maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          cache: 'maven'
       - name: Build with Maven
         run: mvn verify -B

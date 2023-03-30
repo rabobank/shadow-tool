@@ -1,4 +1,5 @@
 {
+  "labels": ["dependency-update"],
   "groupName": "dependencies",
   "groupSlug": "all",
   "lockFileMaintenance": {
