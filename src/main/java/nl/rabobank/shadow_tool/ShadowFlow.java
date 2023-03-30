@@ -120,13 +120,16 @@ public class ShadowFlow<T> {
         final var callNewFlow = shouldCallNewFlow();
         logger.info("{} Calling new flow: {}", instanceNameLogPrefix, callNewFlow);
 
-        return currentFlow.doOnNext(currentResponse -> {
-            if (callNewFlow) {
-                newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
-                        .subscribeOn(scheduler)
-                        .subscribe();
-            }
-        });
+        return Mono.deferContextual(contextView ->
+                currentFlow.doOnNext(currentResponse -> {
+                    if (callNewFlow) {
+                        newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
+                                .contextWrite(contextView)
+                                .subscribeOn(scheduler)
+                                .subscribe()
+                        ;
+                    }
+                }));
     }
 
     /**
@@ -147,13 +150,15 @@ public class ShadowFlow<T> {
         final var callNewFlow = shouldCallNewFlow();
         logger.info("{} Calling new flow: {}", instanceNameLogPrefix, callNewFlow);
 
-        return currentFlow.doOnNext(currentResponse -> {
-            if (callNewFlow) {
-                newFlow.doOnNext(newResponse -> logDifferences(javers.compareCollections(currentResponse, newResponse, clazz)))
-                        .subscribeOn(scheduler)
-                        .subscribe();
-            }
-        });
+        return Mono.deferContextual(contextView ->
+                currentFlow.doOnNext(currentResponse -> {
+                    if (callNewFlow) {
+                        newFlow.doOnNext(newResponse -> logDifferences(javers.compareCollections(currentResponse, newResponse, clazz)))
+                                .contextWrite(contextView)
+                                .subscribeOn(scheduler)
+                                .subscribe();
+                    }
+                }));
     }
 
     private void doShadowFlow(final Supplier<Diff> diffSupplier) {
