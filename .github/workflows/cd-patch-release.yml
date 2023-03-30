@@ -54,4 +54,6 @@ jobs:
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.VERSION_PUSH_PAT }}
+          author_email: ${{ secrets.BOT_MAIL }}
+          author_name: shadow-tool-bot
