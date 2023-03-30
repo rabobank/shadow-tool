@@ -1,6 +1,19 @@
 # Shadow Tool
 
 This library allows you to safely test your migration from one back-end to another in production!  
+## Installation
+### Maven
+```xml
+<dependency>
+   <groupId>io.github.rabobank</groupId>
+   <artifactId>shadow-tool</artifactId>
+   <version>${shadow-tool.version}</version>
+</dependency>
+```
+### Gradle
+```kotlin
+implementation("io.github.rabobank:shadow-tool:$version")
+```
 
 The Shadow Tool can be easily integrated in your Java/Kotlin project and allows you to compare the current back-end service your application is using against the new back-end you plan on using.
 Since it actually runs on production (in the background), it gives you trust in:
