@@ -20,8 +20,8 @@ class EncryptionService {
     EncryptionService(final String keyInHex, final String initializationVectorInHex) {
         if (!(hasSize(keyInHex, KEY_SIZE) && hasSize(initializationVectorInHex, IV_SIZE))) {
             final var errorMessage = String.format("Invalid key and IV spec. Expected key to be %d characters (%d bytes), but got %s characters. Expected IV to be %d characters (%d bytes), but got %s characters.",
-                KEY_SIZE, KEY_SIZE / 2, keyInHex != null ? keyInHex.length() : "'null'",
-                IV_SIZE, IV_SIZE / 2, initializationVectorInHex != null ? initializationVectorInHex.length() : "'null'");
+                    KEY_SIZE, KEY_SIZE / 2, keyInHex != null ? keyInHex.length() : "'null'",
+                    IV_SIZE, IV_SIZE / 2, initializationVectorInHex != null ? initializationVectorInHex.length() : "'null'");
             throw new IllegalArgumentException(errorMessage);
         }
 
@@ -42,9 +42,8 @@ class EncryptionService {
             cipher.init(Cipher.ENCRYPT_MODE, key, iv);
             final var cipherText = cipher.doFinal(value.getBytes());
             return Base64.toBase64String(cipherText);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (final Exception e) {
+            throw new SecurityException(e);
         }
     }
-
 }

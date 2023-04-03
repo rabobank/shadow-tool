@@ -20,14 +20,14 @@ class EncryptionServiceTest {
     void encryptAndDecrypt() {
         final var encryptionService = new EncryptionService(CORRECT_KEY, CORRECT_IV);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
-            "'madrigals' collection changes :\n" +
-            "   1. 'Bruno' changed to 'Mirabel'\n" +
-            "   0. 'Bruno' added";
+                "'madrigals' collection changes :\n" +
+                "   1. 'Bruno' changed to 'Mirabel'\n" +
+                "   0. 'Bruno' added";
 
         final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
 
         assertEquals("JJgCpPVpuiETp+OTtVh/QfMH71M/e5w3aQ4V0hNEDUx3yVxikTRuLvKl+EQNzQZIpwyvuNnmPputpDash0RQf8SS4n9lyzU3If6UbEa0Rlx1IgG7OO5NHp+Mjg6MaQq2cXsR579oM7lkfiEwRIFqRfsReaNqfsMxwwNhIUp/nCVQd6HextJMtqPpZcht+OGL",
-            encryptedDifferences);
+                encryptedDifferences);
     }
 
     @ParameterizedTest
@@ -40,13 +40,13 @@ class EncryptionServiceTest {
 
     static Stream<Arguments> wrongParametersFailsConstructor() {
         return Stream.of(
-            Arguments.of(IllegalArgumentException.class, "123", CORRECT_IV),
-            Arguments.of(IllegalArgumentException.class, CORRECT_KEY, "234"),
-            Arguments.of(IllegalArgumentException.class, null, CORRECT_IV),
-            Arguments.of(IllegalArgumentException.class, CORRECT_KEY, null),
-            Arguments.of(DecoderException.class, corruptHex(CORRECT_KEY), CORRECT_IV),
-            Arguments.of(DecoderException.class, CORRECT_KEY, corruptHex(CORRECT_IV)),
-            Arguments.of(DecoderException.class, corruptHex(CORRECT_KEY), corruptHex(CORRECT_IV))
+                Arguments.of(IllegalArgumentException.class, "123", CORRECT_IV),
+                Arguments.of(IllegalArgumentException.class, CORRECT_KEY, "234"),
+                Arguments.of(IllegalArgumentException.class, null, CORRECT_IV),
+                Arguments.of(IllegalArgumentException.class, CORRECT_KEY, null),
+                Arguments.of(DecoderException.class, corruptHex(CORRECT_KEY), CORRECT_IV),
+                Arguments.of(DecoderException.class, CORRECT_KEY, corruptHex(CORRECT_IV)),
+                Arguments.of(DecoderException.class, corruptHex(CORRECT_KEY), corruptHex(CORRECT_IV))
         );
     }
 

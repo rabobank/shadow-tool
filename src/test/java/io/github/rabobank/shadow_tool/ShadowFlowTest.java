@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,7 +37,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ShadowFlowTest {
+class ShadowFlowTest {
 
     private static final Logger logger = ((Logger) LoggerFactory.getLogger(ShadowFlow.class));
     private static ListAppender<ILoggingEvent> listAppender;
@@ -163,12 +164,12 @@ public class ShadowFlowTest {
 
     @Test
     void shouldRunShadowFlowMonoCollectionsWithVariables() {
-        var asyncCallA = Mono.just(List.of(dummyObjectA));
-        var asyncCallB = Mono.just(List.of(dummyObjectB));
+        var asyncCallA = List.of(dummyObjectA);
+        var asyncCallB = List.of(dummyObjectB);
 
         createBlockingShadowFlow(100).compareCollections(
-                asyncCallA,
-                asyncCallB,
+                Mono.just(asyncCallA),
+                Mono.just(asyncCallB),
                 DummyObject.class
         ).block();
 
@@ -182,30 +183,25 @@ public class ShadowFlowTest {
         final var result = shadowFlow.compare(
                 () -> dummyObjectA,
                 () -> {
-                    try {
-                        MILLISECONDS.sleep(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-
+                    await().atMost(1, SECONDS);
                     isShadowFlowDone.set(true);
                     return dummyObjectB;
                 }
         );
-
         assertEquals(dummyObjectA, result);
         assertFalse(isShadowFlowDone.get());
     }
 
-    @Test
-    void verifyDifferencesAreLogged() {
-        final var shadowFlow = createBlockingShadowFlow(100);
+    @ParameterizedTest
+    @MethodSource("verifyLogMessageArguments")
+    void verifyLogs(final int percentage, final String message) {
+        final var shadowFlow = createBlockingShadowFlow(percentage);
         shadowFlow.compare(
                 () -> dummyObjectA,
                 () -> dummyObjectB
         );
 
-        assertThatLogContains("The following differences were found: place, madrigals");
+        assertThatLogContains(message);
     }
 
     @Test
@@ -220,17 +216,6 @@ public class ShadowFlowTest {
         );
 
         assertThatLogContains("The following differences were found: place, madrigals. Encrypted values: <encrypted-data>");
-    }
-
-    @Test
-    void verifyInstanceNameIsPartOfLogMessage() {
-        final var shadowFlow = createBlockingShadowFlow(100);
-        shadowFlow.compare(
-                () -> dummyObjectA,
-                () -> dummyObjectB
-        );
-
-        assertThatLogContains("[instance=default] The following differences were found: place, madrigals");
     }
 
     @Test
@@ -296,18 +281,6 @@ public class ShadowFlowTest {
     }
 
     @Test
-    void shouldDisableShadowFlowWhenAnInvalidPercentageIsConfigured() {
-        final var shadowFlow = createBlockingShadowFlow(101);
-
-        shadowFlow.compare(
-                () -> dummyObjectA,
-                () -> dummyObjectB
-        );
-
-        assertThatLogContains("Invalid percentage! Must be within the range of 0 and 100. Got 101. The shadow flow will be effectively disabled by setting it to 0%.");
-    }
-
-    @Test
     void shouldBeAbleToCompareCollectionOfObjects() {
         final var shadowFlow = createBlockingShadowFlow(100);
 
@@ -336,5 +309,13 @@ public class ShadowFlowTest {
                 Arguments.of(new SameThreadExecutorService())
         );
 
+    }
+
+    static Stream<Arguments> verifyLogMessageArguments() {
+        return Stream.of(
+                Arguments.of(100, "The following differences were found: place, madrigals"),
+                Arguments.of(100, "[instance=default] The following differences were found: place, madrigals"),
+                Arguments.of(101, "Invalid percentage! Must be within the range of 0 and 100. Got 101. The shadow flow will be effectively disabled by setting it to 0%.")
+        );
     }
 }

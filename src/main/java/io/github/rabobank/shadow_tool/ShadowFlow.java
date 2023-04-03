@@ -27,6 +27,7 @@ public class ShadowFlow<T> {
     private static final Logger logger = LoggerFactory.getLogger(ShadowFlow.class);
     private static final String INSTANCE_PREFIX_FORMAT = "[instance=%s]";
     private static final String DEFAULT_INSTANCE_NAME = "default";
+    private static final String MESSAGE_FORMAT = "{} Calling new flow: {}";
     private final int percentage;
     private final ExecutorService executorService;
     private final EncryptionService encryptionService;
@@ -118,7 +119,7 @@ public class ShadowFlow<T> {
      */
     public Mono<T> compare(final Mono<T> currentFlow, final Mono<T> newFlow) {
         final var callNewFlow = shouldCallNewFlow();
-        logger.info("{} Calling new flow: {}", instanceNameLogPrefix, callNewFlow);
+        logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
 
         return Mono.deferContextual(contextView ->
                 currentFlow.doOnNext(currentResponse -> {
@@ -146,9 +147,9 @@ public class ShadowFlow<T> {
      *                    that you want to start using.
      * @return This will always return the mono of currentFlow.
      */
-    public Mono<? extends Collection<T>> compareCollections(final Mono<? extends Collection<T>> currentFlow, final Mono<? extends Collection<T>> newFlow, final Class<T> clazz) {
+    public Mono<Collection<T>> compareCollections(final Mono<Collection<T>> currentFlow, final Mono<Collection<T>> newFlow, final Class<T> clazz) {
         final var callNewFlow = shouldCallNewFlow();
-        logger.info("{} Calling new flow: {}", instanceNameLogPrefix, callNewFlow);
+        logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
 
         return Mono.deferContextual(contextView ->
                 currentFlow.doOnNext(currentResponse -> {
@@ -163,13 +164,13 @@ public class ShadowFlow<T> {
 
     private void doShadowFlow(final Supplier<Diff> diffSupplier) {
         final var callNewFlow = shouldCallNewFlow();
-        logger.info("{} Calling new flow: {}", instanceNameLogPrefix, callNewFlow);
+        logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
 
         if (callNewFlow) {
             try {
                 executorService.submit(() -> logDifferences(diffSupplier.get()));
-            } catch (final Throwable t) {
-                logger.error("{} Failed to run the shadow flow", instanceNameLogPrefix, t);
+            } catch (final Exception e) {
+                logger.error("{} Failed to run the shadow flow", instanceNameLogPrefix, e);
             }
         }
     }
