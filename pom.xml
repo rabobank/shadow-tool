@@ -35,7 +35,7 @@
     <properties>
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
         <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
-        <javers-core.version>6.13.0</javers-core.version>
+        <javers-core.version>6.14.0</javers-core.version>
         <junit-jupiter-engine.version>5.9.2</junit-jupiter-engine.version>
         <junit-jupiter-params.version>5.9.2</junit-jupiter-params.version>
         <logback-classic.version>1.4.6</logback-classic.version>
