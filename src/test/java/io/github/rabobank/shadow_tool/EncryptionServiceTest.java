@@ -1,4 +1,4 @@
-package nl.rabobank.shadow_tool;
+package io.github.rabobank.shadow_tool;
 
 import org.bouncycastle.util.encoders.DecoderException;
 import org.junit.jupiter.api.Test;

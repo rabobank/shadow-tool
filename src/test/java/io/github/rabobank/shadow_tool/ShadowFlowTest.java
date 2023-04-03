@@ -1,9 +1,9 @@
-package nl.rabobank.shadow_tool;
+package io.github.rabobank.shadow_tool;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import nl.rabobank.shadow_tool.ShadowFlow.ShadowFlowBuilder;
+import io.github.rabobank.shadow_tool.ShadowFlow.ShadowFlowBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
