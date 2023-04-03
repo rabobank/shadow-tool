@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.5.0
         with:
           persist-credentials: false # use GITHUB_TOKEN, instead of personal token
           fetch-depth: 0 # otherwise, pushing refs to dest repo fails
