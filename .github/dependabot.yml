@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "*"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Specify labels so our CD pipeline triggers
+    labels:
+      - "dependency-update"
