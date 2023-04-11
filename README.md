@@ -71,6 +71,48 @@ The Shadow Tool is released to Maven Central, where you can find its latest vers
 implementation("io.github.rabobank:shadow-tool:$version")
 ```
 
+The Shadow Tool can be easily integrated in your Java/Kotlin project and allows you to compare the current back-end service your application is using against the new back-end you plan on using.
+Since it actually runs on production (in the background), it gives you trust in:
+1. the connection towards your new back-end,
+2. the data quality coming from the new back-end,
+3. whether your code correctly maps the data of the new back-end to your existing domain.
+
+The tool is designed to be a plug-and-play solution which runs without functional impact in your current production app.
+When activated, when your app fetches data from your current back-end it will additionally call the new back-end and compare the data in parallel.
+This will be sampled based on a configured percentage as to not overload your application.
+The findings are reported using log statements.
+
+## Getting started
+1. Build the library locally and add it as a dependency to your project (**We are still working on deploying this to Maven Central**)
+2. In order to see the differences, the library expects the `slf4j-api` library to be provided by the using application.
+3. Optional: To be able to inspect the values of the differences, it is required to set up encryption. Not setting up encryption allows you to see the different keys only, so no values.
+   To begin, an RSA 2048 bit public and private key are required. Generate as follows (for both the public and private key):
+   ```bash
+   openssl genrsa -out pair.pem 2048 && openssl rsa -in pair.pem -pubout -out public.key && openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in pair.pem -out private.key && rm -rf pair.pem
+   ```
+   Keep the private key secret. When the data is sensitive, nobody other than you should be able to inspect these values.
+   To create a `java.security.PublicKey`, you can use below code (add dependency `org.bouncycastle:bcprov-jdk15on`):
+   ```java
+   import java.io.File;
+   import java.io.StringReader;
+   import java.nio.file.Files;
+   import java.security.KeyFactory;
+   import java.security.PublicKey;
+   import java.security.spec.X509EncodedKeySpec;
+   import java.util.Objects;
+   import org.bouncycastle.util.io.pem.PemReader;
+   
+   private static PublicKey publicKey() throws Exception {
+      final var publicKeyFile = new File(Objects.requireNonNull(EncryptionServiceTest.class.getClassLoader().getResource("public.key")).getFile());
+      final var reader = new StringReader(Files.readString(publicKeyFile.toPath()));
+      final var pemReader = new PemReader(reader);
+      final var factory = KeyFactory.getInstance("RSA");
+      final var pemObject = pemReader.readPemObject();
+      final var keyContentAsBytesFromBC = pemObject.getContent();
+      final var pubKeySpec = new X509EncodedKeySpec(keyContentAsBytesFromBC);
+      return factory.generatePublic(pubKeySpec);
+    }
+   ```
 ## How to use?
 
 ```java
@@ -146,20 +188,15 @@ The following differences were found: firstName, lastName. Encrypted values: 6U8
 ```
 
 ## Inspecting the values of differences
-
 Values are encrypted using the public key which is set up during the configuration.
 The algorithm used is RSA with Electronic Codeblock mode (CBC) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
-You can create a runnable jar with the following code to decrypt the values. Continuing the example above (explaining
-how to enable encrypting data):
+You can create a runnable jar with the following code to decrypt the values. Continuing the example above (explaining how to enable encrypting data):
 
 ### Example decrypting values of differences
-
 This can easily be a runnable jar that takes a file or a single line as an argument, when you want to inspect values.
-
 ```java
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.io.pem.PemReader;
-
 import javax.crypto.Cipher;
 import java.io.File;
 import java.io.StringReader;
