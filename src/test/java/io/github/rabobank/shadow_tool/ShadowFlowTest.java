@@ -317,12 +317,4 @@ class ShadowFlowTest {
                 Arguments.of(101, "Invalid percentage! Must be within the range of 0 and 100. Got 101. The shadow flow will be effectively disabled by setting it to 0%.")
         );
     }
-
-    static Stream<Arguments> verifyLogMessageArguments() {
-        return Stream.of(
-                Arguments.of(100, "The following differences were found: place, madrigals"),
-                Arguments.of(100, "[instance=default] The following differences were found: place, madrigals"),
-                Arguments.of(101, "Invalid percentage! Must be within the range of 0 and 100. Got 101. The shadow flow will be effectively disabled by setting it to 0%.")
-        );
-    }
 }
