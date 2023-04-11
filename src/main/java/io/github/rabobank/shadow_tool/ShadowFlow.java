@@ -21,6 +21,9 @@ import java.util.function.Supplier;
 import static java.util.stream.Collectors.joining;
 import static org.javers.core.diff.ListCompareAlgorithm.LEVENSHTEIN_DISTANCE;
 
+/**
+ * @param <T> The model that the current and new flow should be mapped to for comparison.
+ */
 public class ShadowFlow<T> {
 
     private static final int ZERO = 0;
@@ -203,6 +206,9 @@ public class ShadowFlow<T> {
         return ThreadLocalRandom.current().nextInt(HUNDRED) < percentage;
     }
 
+    /**
+     * @param <T> The model that the current and new flow should be mapped to for comparison.
+     */
     public static class ShadowFlowBuilder<T> {
 
         private final Logger logger = LoggerFactory.getLogger(ShadowFlowBuilder.class);
@@ -244,8 +250,7 @@ public class ShadowFlow<T> {
          * This configures the shadow flow to log the values of the differences found between the two flows.
          * Since the data is potentially sensitive, encryption is required.
          *
-         * @param keyInHex                  The key used for encryption, should be 32 bytes length formatted as a Hex string.
-         * @param initializationVectorInHex The IV used for encryption, should be 16 bytes length, formatted as a Hex string.
+         * @param publicKey The public RSA key used for encryption, should be at least 2048 bits.
          * @return This builder.
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
