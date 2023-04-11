@@ -29,20 +29,40 @@ The findings are reported using log statements.
 ## Getting started
 1. Build the library locally and add it as a dependency to your project (**We are still working on deploying this to Maven Central**)
 2. In order to see the differences, the library expects the `slf4j-api` library to be provided by the using application.
-3. Optional: To be able to inspect the values of the differences, it is required to set up encryption.
-   A 32-byte key and 16-byte IV are required, in the representation of a hex-string. Generate as follows (for both the secret and IV):
+3. Optional: To be able to inspect the values of the differences, it is required to set up encryption. Not setting up encryption allows you to see the different keys only, so no values.
+   To begin, an RSA 2048 bit public and private key are required. Generate as follows (for both the public and private key):
    ```bash
-   $ openssl rand -hex 32
-   14f543f5dee18a66f3ed0903023fec797bf3a3e105424e4bd19ce7579a48bdcf
+   openssl genrsa -out pair.pem 2048 && openssl rsa -in pair.pem -pubout -out public.key && openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in pair.pem -out private.key && rm -rf pair.pem
    ```
-   Depending on your data, treat these values as secrets. When the data is sensitive, nobody other than you should be able to inspect these values.
-
+   Keep the private key secret. When the data is sensitive, nobody other than you should be able to inspect these values.
+   To create a `java.security.PublicKey`, you can use below code (add dependency `org.bouncycastle:bcprov-jdk15on`):
+   ```java
+   import java.io.File;
+   import java.io.StringReader;
+   import java.nio.file.Files;
+   import java.security.KeyFactory;
+   import java.security.PublicKey;
+   import java.security.spec.X509EncodedKeySpec;
+   import java.util.Objects;
+   import org.bouncycastle.util.io.pem.PemReader;
+   
+   private static PublicKey publicKey() throws Exception {
+      final var publicKeyFile = new File(Objects.requireNonNull(EncryptionServiceTest.class.getClassLoader().getResource("public.key")).getFile());
+      final var reader = new StringReader(Files.readString(publicKeyFile.toPath()));
+      final var pemReader = new PemReader(reader);
+      final var factory = KeyFactory.getInstance("RSA");
+      final var pemObject = pemReader.readPemObject();
+      final var keyContentAsBytesFromBC = pemObject.getContent();
+      final var pubKeySpec = new X509EncodedKeySpec(keyContentAsBytesFromBC);
+      return factory.generatePublic(pubKeySpec);
+    }
+   ```
 ## How to use?
 
 ```java
 ShadowFlow<AccountInfo> shadowFlow = new ShadowFlowBuilder<AccountInfo>(10)
         .withInstanceName("account-service") # Optional. Default value is 'default'
-        .withEncryption(<key>, <iv>) # Optional. See configuration above for generating these secrets.
+        .withEncryption(<java.security.PublicKey>) # Optional. See configuration above for generating these secrets.
         .build();
 
 AccountInfo result = shadowFlow.compare(
@@ -105,15 +125,43 @@ The following differences were found: firstName, lastName. Encrypted values: 6U8
 ```
 
 ## Inspecting the values of differences
-Values are encrypted using the encryption key and initialization vector (IV) which are set up during the configuration.
-The algorithm used is AES, with PKCS5 padding and Cipher block chaining (CBC).
-A utility like OpenSSL can be used to decrypt the values. Continuing the example above:
+Values are encrypted using the public key which is set up during the configuration.
+The algorithm used is RSA with Electronic Codeblock mode (CBC) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
+You can create a runnable jar with the following code to decrypt the values. Continuing the example above (explaining how to enable encrypting data):
 
-```bash
-$ encrypted_text="6U8H2WSpEoXY1cFDS2Ze/63ohRVIS4t3A4I5E3RJeemrqXTWEUN6BlTawMVgyjQri9t8l6t9jotJmIEQOoc++C9W38Z8mYEAzU2UzvGm50AMcFqEXheSBEw7c3LZFRoE"
-$ key="2d4a75512e73b8761400b49aff747af368a18de82d3865fe597efaf6d11053f9"
-$ iv="ebc3a59998fe444066b5fd819578d564"
-$ echo -n $encrypted_text | openssl enc -d -aes-256-cbc -base64 -nosalt -A -K $key -iv $iv
-'firstName' changed: 'terry' -> 'Terry'
-'lastName' changed: 'pratchett' -> 'Pratchett'
+### Example decrypting values of differences
+This can easily be a runnable jar that takes a file or a single line as an argument, when you want to inspect values.
+```java
+import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.io.pem.PemReader;
+import javax.crypto.Cipher;
+import java.io.File;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Objects;
+
+void decrypt() throws Exception {
+    final var encryptedDifferences = "fr1vTtM0wM91neX0Fl+Owq6fuTgkRD0CRPGBwDKftV1rBCPmzpLtQDMSV6sAw89M+YKOqLTQGBYckj6ZUVG/TTQqcoNx8BThAA2GQAvnAWBDSOEykpWf39Dp7L1rqZUbNqmf/DCxY45MdSutjde+DVwtpdRjJHcF4BELfQS+dG5TscXfEyQ75HIdBqWhpdaTh2My+7BOzo88zZKVqQwdDBymW78SkJ3Ez3X9kNjxlTI7w4LR5y3Cis5rIEfBnoMz1YMilx+5s0Ku9flzciFxr81czIImTmpBmvAscmtOB8ABfdDcPVvAEZlDzHktIHpH2pQ0QLnvVum43QLCfyezDg==";
+    //Decrypt and verify
+    var privateKey = privateKey();
+    final var cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
+    cipher.init(Cipher.DECRYPT_MODE, privateKey);
+    final var cipherText = cipher.doFinal(Base64.decode(encryptedDifferences));
+    final var expectedUnencryptedResult = new String(cipherText, StandardCharsets.UTF_8);
+}
+
+private static PrivateKey privateKey() throws Exception {
+    final var privateKeyFile = new File(Objects.requireNonNull(EncryptionServiceTest.class.getClassLoader().getResource("private.key")).getFile());
+    final var reader = new StringReader(Files.readString(privateKeyFile.toPath()));
+    final var pemReader = new PemReader(reader);
+    final var factory = KeyFactory.getInstance("RSA");
+    final var pemObject = pemReader.readPemObject();
+    final var keyContentAsBytesFromBC = pemObject.getContent();
+    final var privKeySpec = new PKCS8EncodedKeySpec(keyContentAsBytesFromBC);
+    return factory.generatePrivate(privKeySpec);
+}
 ```

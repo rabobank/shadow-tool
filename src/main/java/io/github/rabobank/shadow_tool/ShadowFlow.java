@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -96,6 +97,7 @@ public class ShadowFlow<T> {
      *                    that you currently have.
      * @param newFlow     A supplier that return the result of the new service call
      *                    that you want to start using.
+     * @param clazz       The model that the current and new flow should be mapped to for comparison.
      * @return This will always return the value of currentFlow supplier.
      */
     public Collection<T> compareCollections(final Supplier<Collection<T>> currentFlow, final Supplier<Collection<T>> newFlow, final Class<T> clazz) {
@@ -145,6 +147,7 @@ public class ShadowFlow<T> {
      *                    that you currently have.
      * @param newFlow     A mono that returns the result of the new service call
      *                    that you want to start using.
+     * @param clazz       The model that the current and new flow should be mapped to for comparison.
      * @return This will always return the mono of currentFlow.
      */
     public Mono<Collection<T>> compareCollections(final Mono<Collection<T>> currentFlow, final Mono<Collection<T>> newFlow, final Class<T> clazz) {
@@ -245,9 +248,9 @@ public class ShadowFlow<T> {
          * @param initializationVectorInHex The IV used for encryption, should be 16 bytes length, formatted as a Hex string.
          * @return This builder.
          */
-        public ShadowFlowBuilder<T> withEncryption(final String keyInHex, final String initializationVectorInHex) {
+        public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             try {
-                this.encryptionService = new EncryptionService(keyInHex, initializationVectorInHex);
+                this.encryptionService = new EncryptionService(publicKey);
             } catch (Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
