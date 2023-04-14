@@ -45,21 +45,20 @@ public class ShadowFlow<T> {
         this.percentage = percentage;
         this.encryptionService = encryptionService;
         final String nonNullInstanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
-        this.instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, nonNullInstanceName);
+        instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, nonNullInstanceName);
 
         if (executorService != null) {
             this.executorService = executorService;
-            this.scheduler = Schedulers.fromExecutor(executorService);
+            scheduler = Schedulers.fromExecutor(executorService);
         } else {
             this.executorService = Executors.newCachedThreadPool();
-            this.scheduler = Schedulers.boundedElastic();
+            scheduler = Schedulers.boundedElastic();
         }
     }
 
     private final Javers javers = JaversBuilder.javers()
             .withListCompareAlgorithm(LEVENSHTEIN_DISTANCE)
             .build();
-
 
     /**
      * This will always call currentFlow, and based on the percentage also call the
@@ -124,10 +123,10 @@ public class ShadowFlow<T> {
      */
     public Mono<T> compare(final Mono<T> currentFlow, final Mono<T> newFlow) {
         final var callNewFlow = shouldCallNewFlow();
-        logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
 
         return Mono.deferContextual(contextView ->
                 currentFlow.doOnNext(currentResponse -> {
+                    logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
                                 .contextWrite(contextView)
@@ -153,12 +152,12 @@ public class ShadowFlow<T> {
      * @param clazz       The model that the current and new flow should be mapped to for comparison.
      * @return This will always return the mono of currentFlow.
      */
-    public Mono<Collection<T>> compareCollections(final Mono<Collection<T>> currentFlow, final Mono<Collection<T>> newFlow, final Class<T> clazz) {
+    public Mono<Collection<T>> compareCollections(final Mono<? extends Collection<T>> currentFlow, final Mono<? extends Collection<T>> newFlow, final Class<T> clazz) {
         final var callNewFlow = shouldCallNewFlow();
-        logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
 
         return Mono.deferContextual(contextView ->
                 currentFlow.doOnNext(currentResponse -> {
+                    logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compareCollections(currentResponse, newResponse, clazz)))
                                 .contextWrite(contextView)
@@ -255,7 +254,7 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             try {
-                this.encryptionService = new EncryptionService(publicKey);
+                encryptionService = new EncryptionService(publicKey);
             } catch (Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
