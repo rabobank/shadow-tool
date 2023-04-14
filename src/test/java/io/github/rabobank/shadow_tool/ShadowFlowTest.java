@@ -176,6 +176,21 @@ class ShadowFlowTest {
         assertThatLogContains("The following differences were found: place, madrigals");
     }
 
+    // Same test, slightly different input type to validate "? extends Collection<T>"
+    @Test
+    void shouldRunShadowFlowMonoWithCollectionExtendWithVariables() {
+        var asyncCallA = Mono.just(List.of(dummyObjectA));
+        var asyncCallB = Mono.just(List.of(dummyObjectB));
+
+        createBlockingShadowFlow(100).compareCollections(
+                asyncCallA,
+                asyncCallB,
+                DummyObject.class
+        ).block();
+
+        assertThatLogContains("The following differences were found: place, madrigals");
+    }
+
     @Test
     void shouldRunShadowFlowAsynchronouslyByDefault() {
         final var isShadowFlowDone = new AtomicBoolean(false);
