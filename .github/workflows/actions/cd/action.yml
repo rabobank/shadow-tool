@@ -47,15 +47,18 @@ runs:
         gpg-private-key: ${{ inputs.gpg-key }} # Value of the GPG private key to import
         gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
     - name: Set release version
-      shell: mvn build-helper:parse-version versions:set -DnewVersion=${{ inputs.new-version }} versions:commit
+      shell: bash
+      run: mvn build-helper:parse-version versions:set -DnewVersion=${{ inputs.new-version }} versions:commit
     - name: Build and Release
-      shell: mvn clean deploy
+      shell: bash
+      run: mvn clean deploy
       env:
         OSSRH_USERNAME: ${{ inputs.server-username }}
         OSSRH_TOKEN: ${{ inputs.server-token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
     - name: Set Release version env variable
-      shell: |
+      shell: bash
+      run: |
         echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
     - name: Create Release
       id: create_release
@@ -68,7 +71,8 @@ runs:
         draft: true
         prerelease: false
     - name: Prepare next release version
-      shell: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+      shell: bash
+      run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
     - name: Commit & Push changes
       uses: actions-js/push@master
       with:
