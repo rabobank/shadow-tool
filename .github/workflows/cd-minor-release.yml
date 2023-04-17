@@ -3,14 +3,13 @@ name: Minor Release
 on:
   workflow_dispatch:
 
-env:
-  NEW_VERSION: '\${parsedVersion.majorVersion}.\${parsedVersion.nextMinorVersion}.0'
-
 jobs:
   Deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3.5.0
-      - name: CD
-        uses: ./.github/actions/cd.yml
+      - id: CD
+        uses: .github/actions/cd@v1
+        with:
+          new-version: '\${parsedVersion.majorVersion}.\${parsedVersion.nextMinorVersion}.0'
