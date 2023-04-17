@@ -5,6 +5,27 @@ inputs:
   new-version:  # id of input
     description: 'Pattern for new version'
     required: true
+  gpg-key:
+    description: 'GPG Key'
+    required: true
+  gpg-passphrase:
+    description: 'GPG Passphrase'
+    required: true
+  server-username:
+    description: 'Username for maven deploy'
+    required: true
+  server-token:
+    description: 'Server token for maven deploy'
+    required: true
+  github-token:
+    description: 'GitHub token'
+    required: true
+  version-push-pat:
+    description: 'PAT to push a version'
+    required: true
+  bot-mail:
+    description: 'Email address of the bot'
+    required: true
 
 runs:
   using: composite
@@ -23,34 +44,34 @@ runs:
         server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: OSSRH_USERNAME # env variable for username in deploy
         server-password: OSSRH_TOKEN # env variable for token in deploy
-        gpg-private-key: ${{ secrets.GPG_KEY }} # Value of the GPG private key to import
+        gpg-private-key: ${{ inputs.gpg-key }} # Value of the GPG private key to import
         gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
     - name: Set release version
-      run: mvn build-helper:parse-version versions:set -DnewVersion=${{ inputs.new-version }} versions:commit
+      shell: mvn build-helper:parse-version versions:set -DnewVersion=${{ inputs.new-version }} versions:commit
     - name: Build and Release
-      run: mvn clean deploy
+      shell: mvn clean deploy
       env:
-        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        OSSRH_USERNAME: ${{ inputs.server-username }}
+        OSSRH_TOKEN: ${{ inputs.server-token }}
+        MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
     - name: Set Release version env variable
-      run: |
+      shell: |
         echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         tag_name: ${{ env.RELEASE_VERSION }}
         release_name: Release ${{ env.RELEASE_VERSION }}
         draft: true
         prerelease: false
     - name: Prepare next release version
-      run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+      shell: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
     - name: Commit & Push changes
       uses: actions-js/push@master
       with:
-        github_token: ${{ secrets.VERSION_PUSH_PAT }}
-        author_email: ${{ secrets.BOT_MAIL }}
+        github_token: ${{ inputs.version-push-pat }}
+        author_email: ${{ inputs.bot-mail }}
         author_name: shadow-tool-bot
