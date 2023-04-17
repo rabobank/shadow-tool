@@ -10,6 +10,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3.5.0
       - id: CD
-        uses: .github/actions/cd@v1
+        uses: ./.github/workflows/actions/cd@v1
         with:
           new-version: '\${parsedVersion.majorVersion}.\${parsedVersion.nextMinorVersion}.0'
