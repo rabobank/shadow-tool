@@ -4,10 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-  - package-ecosystem: "*"
+  - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "weekly"
-    # Specify labels so our CD pipeline triggers
     labels:
       - "dependency-update"
