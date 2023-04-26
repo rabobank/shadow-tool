@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    labels:
+      - "actions-update"
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
