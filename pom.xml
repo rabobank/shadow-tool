@@ -39,7 +39,7 @@
         <awaitility.version>4.2.0</awaitility.version>
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
         <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
-        <javers-core.version>6.14.0</javers-core.version>
+        <javers-core.version>7.0.0</javers-core.version>
         <junit-jupiter.version>5.9.3</junit-jupiter.version>
         <logback-classic.version>1.4.7</logback-classic.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
