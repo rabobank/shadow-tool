@@ -272,6 +272,10 @@ public class ShadowFlow<T> {
             return this;
         }
 
+        /**
+         * Build a new ShadowFlow instance.
+         * @return New instance of ShadowFlow
+         */
         public ShadowFlow<T> build() {
             return new ShadowFlow<>(percentage, executorService, encryptionService, instanceName);
         }
