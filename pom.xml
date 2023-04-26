@@ -41,7 +41,7 @@
         <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
         <javers-core.version>6.14.0</javers-core.version>
         <junit-jupiter.version>5.9.2</junit-jupiter.version>
-        <logback-classic.version>1.4.6</logback-classic.version>
+        <logback-classic.version>1.4.7</logback-classic.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
