@@ -1,40 +1,35 @@
 # Shadow Tool
 
-This library allows you to safely test your migration from one back-end to another in production!  
-## Installation
-### Maven
-```xml
-<dependency>
-   <groupId>io.github.rabobank</groupId>
-   <artifactId>shadow-tool</artifactId>
-   <version>${shadow-tool.version}</version>
-</dependency>
-```
-### Gradle
-```kotlin
-implementation("io.github.rabobank:shadow-tool:$version")
-```
+This library allows you to safely test your migration from one back-end to another in production!
 
-The Shadow Tool can be easily integrated in your Java/Kotlin project and allows you to compare the current back-end service your application is using against the new back-end you plan on using.
+The Shadow Tool can be easily integrated in your Java/Kotlin project and allows you to compare the current back-end
+service your application is using against the new back-end you plan on using.
 Since it actually runs on production (in the background), it gives you trust in:
+
 1. the connection towards your new back-end,
 2. the data quality coming from the new back-end,
 3. whether your code correctly maps the data of the new back-end to your existing domain.
 
 The tool is designed to be a plug-and-play solution which runs without functional impact in your current production app.
-When activated, when your app fetches data from your current back-end it will additionally call the new back-end and compare the data in parallel.
+When activated, when your app fetches data from your current back-end it will additionally call the new back-end and
+compare the data in parallel.
 This will be sampled based on a configured percentage as to not overload your application.
 The findings are reported using log statements.
 
 ## Getting started
-1. Build the library locally and add it as a dependency to your project (**We are still working on deploying this to Maven Central**)
+
+1. Build the library locally and add it as a dependency to your project (**We are still working on deploying this to
+   Maven Central**)
 2. In order to see the differences, the library expects the `slf4j-api` library to be provided by the using application.
-3. Optional: To be able to inspect the values of the differences, it is required to set up encryption. Not setting up encryption allows you to see the different keys only, so no values.
-   To begin, an RSA (at least) 2048 bit public and private key are required. Generate as follows (for both the public and private key):
+3. Optional: To be able to inspect the values of the differences, it is required to set up encryption. Not setting up
+   encryption allows you to see the different keys only, so no values.
+   To begin, an RSA (at least) 2048 bit public and private key are required. Generate as follows (for both the public
+   and private key):
    ```bash
    openssl genrsa -out pair.pem 2048 && openssl rsa -in pair.pem -pubout -out public.key && openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in pair.pem -out private.key && rm -rf pair.pem
    ```
-   Keep the private key secret. When the data is sensitive, nobody other than you should be able to inspect these values.
+   Keep the private key secret. When the data is sensitive, nobody other than you should be able to inspect these
+   values.
    To create a `java.security.PublicKey`, you can use below code (add dependency `org.bouncycastle:bcprov-jdk15on`):
    ```java
    import java.io.File;
@@ -57,6 +52,27 @@ The findings are reported using log statements.
       return factory.generatePublic(pubKeySpec);
     }
    ```
+
+## Installation
+
+The Shadow Tool is released to Maven Central, where you can find its latest version.
+
+### Maven
+
+```xml
+<dependency>
+    <groupId>io.github.rabobank</groupId>
+    <artifactId>shadow-tool</artifactId>
+    <version>${shadow-tool.version}</version>
+</dependency>
+```
+
+### Gradle
+
+```kotlin
+implementation("io.github.rabobank:shadow-tool:$version")
+```
+
 ## How to use?
 
 ```java
@@ -71,34 +87,39 @@ AccountInfo result = shadowFlow.compare(
 );
 ```
 
-The result is always from the first supplier. So in this case, `result` always yields the response of the `yourCurrentBackend` service.
+The result is always from the first supplier. So in this case, `result` always yields the response of
+the `yourCurrentBackend` service.
 
-The 10 means that for 10% of all requests, the `yourNewBackend` is invoked as well and its response is compared against the `yourCurrentBackend` response.
+The 10 means that for 10% of all requests, the `yourNewBackend` is invoked as well and its response is compared against
+the `yourCurrentBackend` response.
 This happens asynchronously, so it will not have impact on the main flow performance-wise.
 Be aware that the more often the Shadow Tool runs, the more resources your application uses and back-ends are called.
 Take care to not set this number too high for high-traffic applications.
 
 To be able to compare apples with apples, both services are required to return the same domain classes.
 In the example above, we called it `AccountInfo`.
-Also, since the secondary call is already mapped to the correct domain, it is super easy to finish the migration: just replace the first call with the secondary call and remove the Shadow Tool code.
+Also, since the secondary call is already mapped to the correct domain, it is super easy to finish the migration: just
+replace the first call with the secondary call and remove the Shadow Tool code.
 
-You are able to distinguish the results of multiple shadow flows running in your application by setting an instance name. 
+You are able to distinguish the results of multiple shadow flows running in your application by setting an instance
+name.
 This will be part of the log messages.
 
 #### Reactive
+
 The Shadow Tool also provides a reactive API based on Project Reactor.
 
 ```java
 class AccountInfoService {
     // fields and constructor
-    
+
     public Mono<AccountInfo> getAccountInfo() {
         return shadowFlow.compare(
                 getAccountInfoFromCurrent(),
                 getAccountInfoFromNew()
         );
     }
-    
+
     private Mono<AccountInfo> getAccountInfoFromCurrent() {
         return yourCurrentBackend.getAccountInfoMono()
                 .map(...);
@@ -112,8 +133,10 @@ class AccountInfoService {
 ```
 
 ## Logs
+
 The Shadow Tool logs whenever it finds differences between the two flows.
-It will always log the field names of the objects containing the differences, and it can also log the values when encryption is set up.
+It will always log the field names of the objects containing the differences, and it can also log the values when
+encryption is set up.
 Something like the following can be expected:
 
 ```
@@ -125,15 +148,20 @@ The following differences were found: firstName, lastName. Encrypted values: 6U8
 ```
 
 ## Inspecting the values of differences
+
 Values are encrypted using the public key which is set up during the configuration.
 The algorithm used is RSA with Electronic Codeblock mode (CBC) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
-You can create a runnable jar with the following code to decrypt the values. Continuing the example above (explaining how to enable encrypting data):
+You can create a runnable jar with the following code to decrypt the values. Continuing the example above (explaining
+how to enable encrypting data):
 
 ### Example decrypting values of differences
+
 This can easily be a runnable jar that takes a file or a single line as an argument, when you want to inspect values.
+
 ```java
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.io.pem.PemReader;
+
 import javax.crypto.Cipher;
 import java.io.File;
 import java.io.StringReader;
