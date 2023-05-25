@@ -3,13 +3,34 @@
 This document contains the basic guidelines to contribute to the Shadow Tool project. If you would like to contribute
 to the project, this document should help you to get started.
 
-## Create an issue
+## Creating an issue
 
 If you think you found a bug in Shadow Tool, or if you have a nice addition to the project you can start by creating
 an issue in GitHub. When creating an issue you can follow below steps:
 
 - To prevent duplicates, check if a similar issue already exists.
 - Clearly describe the issue. If it is a bug provide the steps to reproduce the issue or provide a code example.
+
+## Building the project
+
+### Requirements
+
+- Maven
+- Java JDK 11
+
+### Building
+
+Compiling and running the tests:
+
+```shell
+mvn verify
+```
+
+Installing the jar in your local maven repository:
+
+```shell
+mvn install
+```
 
 ## Code changes
 
