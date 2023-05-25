@@ -18,10 +18,8 @@ The findings are reported using log statements.
 
 ## Getting started
 
-1. Build the library locally and add it as a dependency to your project (**We are still working on deploying this to
-   Maven Central**)
-2. In order to see the differences, the library expects the `slf4j-api` library to be provided by the using application.
-3. Optional: To be able to inspect the values of the differences, it is required to set up encryption. Not setting up
+1. In order to see the differences, the library expects the `slf4j-api` library to be provided by the using application.
+2. Optional: To be able to inspect the values of the differences, it is required to set up encryption. Not setting up
    encryption allows you to see the different keys only, so no values.
    To begin, an RSA (at least) 2048 bit public and private key are required. Generate as follows (for both the public
    and private key):
