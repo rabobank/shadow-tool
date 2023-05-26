@@ -65,6 +65,7 @@ mvn install
 ### Merge process
 
 Once your pull request has received approval from the project maintainers, it will be merged into the main repository.
+
 Congratulations! You've successfully contributed to the Shadow Tool project.
 
 ## Documentation changes
