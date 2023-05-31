@@ -17,44 +17,30 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class EncryptionServiceTest {
+class RSACipherEncryptionServiceTest {
 
     @Test
     void encryptAndDecrypt() throws Exception {
-        final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey());
-        final var encryptionService = new EncryptionService(encryptCipher);
+        final var encryptionService = new RSACipherEncryptionService(publicKey());
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
                 "'madrigals' collection changes :\n" +
                 "   1. 'Bruno' changed to 'Mirabel'\n" +
                 "   0. 'Bruno' added";
-        final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
 
+        final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
         //Decrypt and verify
-        final var decryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        decryptCipher.init(Cipher.DECRYPT_MODE, privateKey());
-        final var cipherText = decryptCipher.doFinal(Base64.decode(encryptedDifferences));
+        var privateKey = privateKey();
+        final var cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        final var cipherText = cipher.doFinal(Base64.decode(encryptedDifferences));
         final var expectedUnencryptedResult = new String(cipherText, StandardCharsets.UTF_8);
 
         assertEquals(expectedUnencryptedResult, plainDifferences);
     }
 
-    @Test
-    void encryptAndForgotToInitCipher() throws Exception {
-        final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        final var encryptionService = new EncryptionService(encryptCipher);
-        final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
-                "'madrigals' collection changes :\n" +
-                "   1. 'Bruno' changed to 'Mirabel'\n" +
-                "   0. 'Bruno' added";
-        var exception = assertThrows(SecurityException.class, () -> encryptionService.encrypt(plainDifferences));
-        assertEquals(exception.getMessage(), "java.lang.IllegalStateException: Cipher not initialized");
-    }
-
     private static PrivateKey privateKey() throws Exception {
-        final var privateKeyFile = new File(Objects.requireNonNull(EncryptionServiceTest.class.getClassLoader().getResource("private.key")).getFile());
+        final var privateKeyFile = new File(Objects.requireNonNull(RSACipherEncryptionServiceTest.class.getClassLoader().getResource("private.key")).getFile());
         final var reader = new StringReader(Files.readString(privateKeyFile.toPath()));
         final var pemReader = new PemReader(reader);
         final var factory = KeyFactory.getInstance("RSA");
@@ -65,7 +51,7 @@ class EncryptionServiceTest {
     }
 
     private static PublicKey publicKey() throws Exception {
-        final var publicKeyFile = new File(Objects.requireNonNull(EncryptionServiceTest.class.getClassLoader().getResource("public.key")).getFile());
+        final var publicKeyFile = new File(Objects.requireNonNull(RSACipherEncryptionServiceTest.class.getClassLoader().getResource("public.key")).getFile());
         final var reader = new StringReader(Files.readString(publicKeyFile.toPath()));
         final var pemReader = new PemReader(reader);
         final var factory = KeyFactory.getInstance("RSA");
