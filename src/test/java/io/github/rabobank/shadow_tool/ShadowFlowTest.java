@@ -221,7 +221,7 @@ class ShadowFlowTest {
 
     @Test
     void verifyEncryptedValueDifferencesAreLogged() {
-        final var mockedEncryptionService = mock(EncryptionService.class);
+        final var mockedEncryptionService = mock(RSACipherEncryptionService.class);
         final var shadowFlow = new ShadowFlow<>(100, new SameThreadExecutorService(), mockedEncryptionService, null);
         when(mockedEncryptionService.encrypt(anyString())).thenReturn("<encrypted-data>");
 

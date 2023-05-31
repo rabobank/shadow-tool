@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import javax.crypto.Cipher;
 import java.security.PublicKey;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -34,13 +35,13 @@ public class ShadowFlow<T> {
     private static final String MESSAGE_FORMAT = "{} Calling new flow: {}";
     private final int percentage;
     private final ExecutorService executorService;
-    private final EncryptionService encryptionService;
+    private final IEncryptionService encryptionService;
     private final Scheduler scheduler;
     private final String instanceNameLogPrefix;
 
     ShadowFlow(final int percentage,
                final ExecutorService executorService,
-               final EncryptionService encryptionService,
+               final IEncryptionService encryptionService,
                final String instanceName) {
         this.percentage = percentage;
         this.encryptionService = encryptionService;
@@ -216,7 +217,7 @@ public class ShadowFlow<T> {
 
         private ExecutorService executorService;
 
-        private EncryptionService encryptionService;
+        private IEncryptionService encryptionService;
 
         private String instanceName;
 
@@ -254,7 +255,24 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             try {
-                encryptionService = new EncryptionService(publicKey);
+                encryptionService = new RSACipherEncryptionService(publicKey);
+            } catch (Exception e) {
+                logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
+            }
+            return this;
+        }
+
+        /**
+         * This configures the shadow flow to log the values of the differences found between the two flows.
+         * Since the data is potentially sensitive, encryption is required. Provide your cryptographic cipher
+         * for this encryption.
+         *
+         * @param cipher The cipher that will do the encryption.
+         * @return This builder.
+         */
+        public ShadowFlowBuilder<T> withCipher(final Cipher cipher) {
+            try {
+                encryptionService = new EncryptionService(cipher);
             } catch (Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
