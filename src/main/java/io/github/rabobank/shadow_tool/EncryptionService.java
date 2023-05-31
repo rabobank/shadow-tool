@@ -3,10 +3,8 @@ package io.github.rabobank.shadow_tool;
 import org.bouncycastle.util.encoders.Base64;
 
 import javax.crypto.Cipher;
-import java.security.PublicKey;
 
-
-class EncryptionService implements IEncryptionService {
+class EncryptionService {
     private final Cipher cipher;
 
     EncryptionService(final Cipher cipher) {
