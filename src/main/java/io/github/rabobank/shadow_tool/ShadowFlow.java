@@ -35,13 +35,13 @@ public class ShadowFlow<T> {
     private static final String MESSAGE_FORMAT = "{} Calling new flow: {}";
     private final int percentage;
     private final ExecutorService executorService;
-    private final IEncryptionService encryptionService;
+    private final EncryptionService encryptionService;
     private final Scheduler scheduler;
     private final String instanceNameLogPrefix;
 
     ShadowFlow(final int percentage,
                final ExecutorService executorService,
-               final IEncryptionService encryptionService,
+               final EncryptionService encryptionService,
                final String instanceName) {
         this.percentage = percentage;
         this.encryptionService = encryptionService;
@@ -217,7 +217,7 @@ public class ShadowFlow<T> {
 
         private ExecutorService executorService;
 
-        private IEncryptionService encryptionService;
+        private EncryptionService encryptionService;
 
         private String instanceName;
 
@@ -248,14 +248,20 @@ public class ShadowFlow<T> {
 
         /**
          * This configures the shadow flow to log the values of the differences found between the two flows.
-         * Since the data is potentially sensitive, encryption is required.
+         * Since the data is potentially sensitive, encryption is required. Mutually exclusive with
+         * {@link ShadowFlowBuilder#withCipher(Cipher cipher) withCipher }. This method will use a cipher with
+         * RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING
          *
          * @param publicKey The public RSA key used for encryption, should be at least 2048 bits.
          * @return This builder.
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             try {
-                encryptionService = new RSACipherEncryptionService(publicKey);
+                final String ALGORITHM = "RSA";
+                final String ALGORITHM_MODE_PADDING = ALGORITHM + "/ECB/OAEPWITHSHA-256ANDMGF1PADDING";
+                final var cipher = Cipher.getInstance(ALGORITHM_MODE_PADDING);
+                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+                withCipher(cipher);
             } catch (Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
@@ -265,7 +271,8 @@ public class ShadowFlow<T> {
         /**
          * This configures the shadow flow to log the values of the differences found between the two flows.
          * Since the data is potentially sensitive, encryption is required. Provide your cryptographic cipher
-         * for this encryption.
+         * for this encryption. Mutually exclusive with
+         * {@link ShadowFlowBuilder#withEncryption(PublicKey publicKey) withEncryption }
          *
          * @param cipher The cipher that will do the encryption.
          * @return This builder.
