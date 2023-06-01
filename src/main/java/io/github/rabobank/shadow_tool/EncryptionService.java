@@ -11,7 +11,7 @@ class EncryptionService {
         this.cipher = cipher;
     }
 
-    public String encrypt(final String value) {
+    String encrypt(final String value) {
         try {
             return Base64.toBase64String(cipher.doFinal(value.getBytes()));
         } catch (final Exception e) {
