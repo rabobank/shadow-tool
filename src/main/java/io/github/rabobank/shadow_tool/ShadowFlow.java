@@ -7,6 +7,7 @@ import org.javers.core.diff.Diff;
 import org.javers.core.diff.changetype.PropertyChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -14,6 +15,7 @@ import reactor.core.scheduler.Schedulers;
 import javax.crypto.Cipher;
 import java.security.PublicKey;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -32,11 +34,10 @@ public class ShadowFlow<T> {
     private static final Logger logger = LoggerFactory.getLogger(ShadowFlow.class);
     private static final String INSTANCE_PREFIX_FORMAT = "[instance=%s]";
     private static final String DEFAULT_INSTANCE_NAME = "default";
-    private static final String MESSAGE_FORMAT = "{} Calling new flow: {}";
+    private static final String CALLING_NEW_FLOW = "{} Calling new flow: {}";
     private static final String DEFAULT_ALGORITHM = "RSA";
     private static final String DEFAULT_ALGORITHM_MODE_PADDING =
             DEFAULT_ALGORITHM + "/ECB/OAEPWITHSHA-256ANDMGF1PADDING";
-
     private final int percentage;
     private final ExecutorService executorService;
     private final EncryptionService encryptionService;
@@ -131,7 +132,7 @@ public class ShadowFlow<T> {
 
         return Mono.deferContextual(contextView ->
                 currentFlow.doOnNext(currentResponse -> {
-                    logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
+                    logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
                                 .contextWrite(contextView)
@@ -161,7 +162,7 @@ public class ShadowFlow<T> {
 
         return Mono.deferContextual(contextView ->
                 currentFlow.doOnNext(currentResponse -> {
-                    logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
+                    logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compareCollections(currentResponse, newResponse, clazz)))
                                 .contextWrite(contextView)
@@ -173,14 +174,26 @@ public class ShadowFlow<T> {
 
     private void doShadowFlow(final Supplier<Diff> diffSupplier) {
         final var callNewFlow = shouldCallNewFlow();
-        logger.info(MESSAGE_FORMAT, instanceNameLogPrefix, callNewFlow);
+        final var contextMap = MDC.getCopyOfContextMap();
+        logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
 
         if (callNewFlow) {
             try {
-                executorService.submit(() -> logDifferences(diffSupplier.get()));
+                executorService.submit(() -> logDifferenceWithMdc(diffSupplier, contextMap));
             } catch (final Exception e) {
                 logger.error("{} Failed to run the shadow flow", instanceNameLogPrefix, e);
             }
+        }
+    }
+
+    private void logDifferenceWithMdc(final Supplier<Diff> diffSupplier, final Map<String, String> contextMap) {
+        if (contextMap != null) MDC.setContextMap(contextMap);
+        try {
+            logDifferences(diffSupplier.get());
+        } catch (final Exception e) {
+            logger.error("{} Failed to run the shadow flow", instanceNameLogPrefix, e);
+        } finally {
+            MDC.clear();
         }
     }
 
