@@ -33,6 +33,10 @@ public class ShadowFlow<T> {
     private static final String INSTANCE_PREFIX_FORMAT = "[instance=%s]";
     private static final String DEFAULT_INSTANCE_NAME = "default";
     private static final String MESSAGE_FORMAT = "{} Calling new flow: {}";
+    private static final String DEFAULT_ALGORITHM = "RSA";
+    private static final String DEFAULT_ALGORITHM_MODE_PADDING =
+            DEFAULT_ALGORITHM + "/ECB/OAEPWITHSHA-256ANDMGF1PADDING";
+
     private final int percentage;
     private final ExecutorService executorService;
     private final EncryptionService encryptionService;
@@ -45,7 +49,7 @@ public class ShadowFlow<T> {
                final String instanceName) {
         this.percentage = percentage;
         this.encryptionService = encryptionService;
-        final String nonNullInstanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
+        final var nonNullInstanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
         instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, nonNullInstanceName);
 
         if (executorService != null) {
@@ -132,8 +136,7 @@ public class ShadowFlow<T> {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
-                                .subscribe()
-                        ;
+                                .subscribe();
                     }
                 }));
     }
@@ -257,9 +260,7 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             try {
-                final String ALGORITHM = "RSA";
-                final String ALGORITHM_MODE_PADDING = ALGORITHM + "/ECB/OAEPWITHSHA-256ANDMGF1PADDING";
-                final var cipher = Cipher.getInstance(ALGORITHM_MODE_PADDING);
+                final var cipher = Cipher.getInstance(DEFAULT_ALGORITHM_MODE_PADDING);
                 cipher.init(Cipher.ENCRYPT_MODE, publicKey);
                 withCipher(cipher);
             } catch (Exception e) {
@@ -299,6 +300,7 @@ public class ShadowFlow<T> {
 
         /**
          * Build a new ShadowFlow instance.
+         *
          * @return New instance of ShadowFlow
          */
         public ShadowFlow<T> build() {
@@ -308,7 +310,7 @@ public class ShadowFlow<T> {
         private int validatePercentage(final int percentage) {
             if (percentage < ZERO || percentage > HUNDRED) {
                 logger.error("Invalid percentage! Must be within the range of 0 and 100. Got {}. " +
-                        "The shadow flow will be effectively disabled by setting it to 0%.", percentage);
+                             "The shadow flow will be effectively disabled by setting it to 0%.", percentage);
                 return ZERO;
             }
 
