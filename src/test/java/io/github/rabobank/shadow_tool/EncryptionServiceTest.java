@@ -25,7 +25,7 @@ class EncryptionServiceTest {
     void encryptAndDecrypt() throws Exception {
         final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
         encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey());
-        final var encryptionService = new EncryptionService(encryptCipher);
+        final var encryptionService = new DefaultEncryptionService(encryptCipher);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
                 "'madrigals' collection changes :\n" +
                 "   1. 'Bruno' changed to 'Mirabel'\n" +
@@ -44,7 +44,7 @@ class EncryptionServiceTest {
     @Test
     void encryptAndForgotToInitCipher() throws Exception {
         final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        final var encryptionService = new EncryptionService(encryptCipher);
+        final var encryptionService = new DefaultEncryptionService(encryptCipher);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
                 "'madrigals' collection changes :\n" +
                 "   1. 'Bruno' changed to 'Mirabel'\n" +
