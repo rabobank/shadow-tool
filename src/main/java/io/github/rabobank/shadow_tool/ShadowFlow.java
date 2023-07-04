@@ -293,10 +293,23 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withCipher(final Cipher cipher) {
             try {
-                encryptionService = new EncryptionService(cipher);
+                encryptionService = new DefaultEncryptionService(cipher);
             } catch (Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
+            return this;
+        }
+
+        /**
+         * This configures the shadow flow to log the values of the differences found between the two flows using
+         * the supplied {@link EncryptionService} implementation. Since the data is potentially sensitive,
+         * encryption is required. Mutually exclusive with {@link ShadowFlowBuilder#withCipher(Cipher cipher) withCipher }.
+         *
+         * @param encryptionService {@link EncryptionService} to be used for encryption
+         * @return This builder.
+         */
+        public ShadowFlowBuilder<T> withEncryptionService(final EncryptionService encryptionService) {
+            this.encryptionService = encryptionService;
             return this;
         }
 
@@ -323,7 +336,7 @@ public class ShadowFlow<T> {
         private int validatePercentage(final int percentage) {
             if (percentage < ZERO || percentage > HUNDRED) {
                 logger.error("Invalid percentage! Must be within the range of 0 and 100. Got {}. " +
-                             "The shadow flow will be effectively disabled by setting it to 0%.", percentage);
+                        "The shadow flow will be effectively disabled by setting it to 0%.", percentage);
                 return ZERO;
             }
 
