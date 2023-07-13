@@ -192,39 +192,6 @@ Values are encrypted using the public key which is set up during the configurati
 The algorithm used is RSA with Electronic Codeblock mode (CBC) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
 You can create a runnable jar with the following code to decrypt the values. Continuing the example above (explaining how to enable encrypting data):
 
-### Example decrypting values of differences
-This can easily be a runnable jar that takes a file or a single line as an argument, when you want to inspect values.
-```java
-import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.io.pem.PemReader;
-import javax.crypto.Cipher;
-import java.io.File;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Objects;
+### Example of decrypting values of differences
 
-void decrypt() throws Exception {
-    final var encryptedDifferences = "fr1vTtM0wM91neX0Fl+Owq6fuTgkRD0CRPGBwDKftV1rBCPmzpLtQDMSV6sAw89M+YKOqLTQGBYckj6ZUVG/TTQqcoNx8BThAA2GQAvnAWBDSOEykpWf39Dp7L1rqZUbNqmf/DCxY45MdSutjde+DVwtpdRjJHcF4BELfQS+dG5TscXfEyQ75HIdBqWhpdaTh2My+7BOzo88zZKVqQwdDBymW78SkJ3Ez3X9kNjxlTI7w4LR5y3Cis5rIEfBnoMz1YMilx+5s0Ku9flzciFxr81czIImTmpBmvAscmtOB8ABfdDcPVvAEZlDzHktIHpH2pQ0QLnvVum43QLCfyezDg==";
-    //Decrypt and verify
-    var privateKey = privateKey();
-    final var cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-    cipher.init(Cipher.DECRYPT_MODE, privateKey);
-    final var cipherText = cipher.doFinal(Base64.decode(encryptedDifferences));
-    final var expectedUnencryptedResult = new String(cipherText, StandardCharsets.UTF_8);
-}
-
-private static PrivateKey privateKey() throws Exception {
-    final var privateKeyFile = new File(Objects.requireNonNull(EncryptionServiceTest.class.getClassLoader().getResource("private.key")).getFile());
-    final var reader = new StringReader(Files.readString(privateKeyFile.toPath()));
-    final var pemReader = new PemReader(reader);
-    final var factory = KeyFactory.getInstance("RSA");
-    final var pemObject = pemReader.readPemObject();
-    final var keyContentAsBytesFromBC = pemObject.getContent();
-    final var privKeySpec = new PKCS8EncodedKeySpec(keyContentAsBytesFromBC);
-    return factory.generatePrivate(privKeySpec);
-}
-```
+An example can be found in one of the tests: [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java).
