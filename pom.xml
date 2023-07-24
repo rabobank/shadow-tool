@@ -40,7 +40,7 @@
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
         <build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
         <javers-core.version>7.3.0</javers-core.version>
-        <junit-jupiter.version>5.9.3</junit-jupiter.version>
+        <junit-jupiter.version>5.10.0</junit-jupiter.version>
         <logback-classic.version>1.4.8</logback-classic.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
