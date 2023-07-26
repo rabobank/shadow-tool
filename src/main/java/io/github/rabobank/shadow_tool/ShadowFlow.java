@@ -34,6 +34,7 @@ public class ShadowFlow<T> {
     private static final String INSTANCE_PREFIX_FORMAT = "[instance=%s]";
     private static final String DEFAULT_INSTANCE_NAME = "default";
     private static final String CALLING_NEW_FLOW = "{} Calling new flow: {}";
+    private static final String FAILED_TO_COMPARE = "{} Failed to run the shadow flow";
     private static final String DEFAULT_ALGORITHM = "RSA";
     private static final String DEFAULT_ALGORITHM_MODE_PADDING =
             DEFAULT_ALGORITHM + "/ECB/OAEPWITHSHA-256ANDMGF1PADDING";
@@ -134,6 +135,7 @@ public class ShadowFlow<T> {
                     logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
+                                .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
                                 .subscribe();
@@ -164,6 +166,7 @@ public class ShadowFlow<T> {
                     logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(javers.compareCollections(currentResponse, newResponse, clazz)))
+                                .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
                                 .subscribe();
@@ -180,7 +183,7 @@ public class ShadowFlow<T> {
             try {
                 executorService.submit(() -> logDifferenceWithMdc(diffSupplier, contextMap));
             } catch (final Exception e) {
-                logger.error("{} Failed to run the shadow flow", instanceNameLogPrefix, e);
+                logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, e);
             }
         }
     }
@@ -190,7 +193,7 @@ public class ShadowFlow<T> {
         try {
             logDifferences(diffSupplier.get());
         } catch (final Exception e) {
-            logger.error("{} Failed to run the shadow flow", instanceNameLogPrefix, e);
+            logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, e);
         } finally {
             MDC.clear();
         }
