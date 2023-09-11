@@ -3,6 +3,6 @@
 
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence,
-# @rabobank/skunkworks will be requested for
+# @rabobank/team-skunkworks will be requested for
 # review when someone opens a pull request.
-*   @rabobank/skunkworks
+*   @rabobank/team-skunkworks
