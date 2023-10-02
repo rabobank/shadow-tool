@@ -12,6 +12,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EncryptionServiceTest {
     private static final PrivateKey PRIVATE_KEY;
@@ -35,9 +36,9 @@ class EncryptionServiceTest {
         encryptCipher.init(Cipher.ENCRYPT_MODE, PUBLIC_KEY);
         final var encryptionService = new DefaultEncryptionService(encryptCipher);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
-                "'madrigals' collection changes :\n" +
-                "   1. 'Bruno' changed to 'Mirabel'\n" +
-                "   0. 'Bruno' added";
+                                     "'madrigals' collection changes :\n" +
+                                     "   1. 'Bruno' changed to 'Mirabel'\n" +
+                                     "   0. 'Bruno' added";
         final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
         //Decrypt and verify
         final var decryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
@@ -53,9 +54,9 @@ class EncryptionServiceTest {
         final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
         final var encryptionService = new DefaultEncryptionService(encryptCipher);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
-                "'madrigals' collection changes :\n" +
-                "   1. 'Bruno' changed to 'Mirabel'\n" +
-                "   0. 'Bruno' added";
+                                     "'madrigals' collection changes :\n" +
+                                     "   1. 'Bruno' changed to 'Mirabel'\n" +
+                                     "   0. 'Bruno' added";
         final var exception = assertThrows(SecurityException.class, () -> encryptionService.encrypt(plainDifferences));
         assertEquals("java.lang.IllegalStateException: Cipher not initialized", exception.getMessage());
     }
