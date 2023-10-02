@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import javax.crypto.Cipher;
 import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Map;
@@ -275,7 +276,9 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             try {
-                this.encryptionService = new EncryptionService(publicKey);
+                final var cipher = Cipher.getInstance(DEFAULT_ALGORITHM_MODE_PADDING);
+                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+                withCipher(cipher);
             } catch (Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
