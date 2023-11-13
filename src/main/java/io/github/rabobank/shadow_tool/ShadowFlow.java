@@ -107,9 +107,10 @@ public class ShadowFlow<T> {
      * @param newFlow     A supplier that return the result of the new service call
      *                    that you want to start using.
      * @param clazz       The model that the current and new flow should be mapped to for comparison.
+     * @param <C>         The type of collection to compare, for example a List
      * @return This will always return the value of currentFlow supplier.
      */
-    public Collection<T> compareCollections(final Supplier<Collection<T>> currentFlow, final Supplier<Collection<T>> newFlow, final Class<T> clazz) {
+    public <C extends Collection<T>> C compareCollections(final Supplier<C> currentFlow, final Supplier<C> newFlow, final Class<T> clazz) {
         final var currentFlowResponse = currentFlow.get();
         doShadowFlow(() -> javers.compareCollections(currentFlowResponse, newFlow.get(), clazz));
 
@@ -157,9 +158,10 @@ public class ShadowFlow<T> {
      * @param newFlow     A mono that returns the result of the new service call
      *                    that you want to start using.
      * @param clazz       The model that the current and new flow should be mapped to for comparison.
+     * @param <C>         The type of collection to compare, for example a List
      * @return This will always return the mono of currentFlow.
      */
-    public Mono<Collection<T>> compareCollections(final Mono<? extends Collection<T>> currentFlow, final Mono<? extends Collection<T>> newFlow, final Class<T> clazz) {
+    public <C extends Collection<T>> Mono<C> compareCollections(final Mono<? extends C> currentFlow, final Mono<? extends C> newFlow, final Class<T> clazz) {
         final var callNewFlow = shouldCallNewFlow();
 
         return Mono.deferContextual(contextView ->
@@ -339,7 +341,7 @@ public class ShadowFlow<T> {
         private int validatePercentage(final int percentage) {
             if (percentage < ZERO || percentage > HUNDRED) {
                 logger.error("Invalid percentage! Must be within the range of 0 and 100. Got {}. " +
-                        "The shadow flow will be effectively disabled by setting it to 0%.", percentage);
+                             "The shadow flow will be effectively disabled by setting it to 0%.", percentage);
                 return ZERO;
             }
 
