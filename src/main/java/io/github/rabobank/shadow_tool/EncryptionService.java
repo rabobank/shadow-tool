@@ -1,7 +1,7 @@
 package io.github.rabobank.shadow_tool;
 
 @FunctionalInterface
-interface EncryptionService {
+public interface EncryptionService {
     /**
      * Encrypts the given data for logging.
      * *Note* The result of this is directly logged and should
