@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -20,9 +19,9 @@ class EncryptionServiceTest {
 
     static {
         try {
-            KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
+            var keyPairGen = KeyPairGenerator.getInstance("RSA");
             keyPairGen.initialize(2048);
-            KeyPair pair = keyPairGen.generateKeyPair();
+            var pair = keyPairGen.generateKeyPair();
             PRIVATE_KEY = pair.getPrivate();
             PUBLIC_KEY = pair.getPublic();
         } catch (NoSuchAlgorithmException e) {
