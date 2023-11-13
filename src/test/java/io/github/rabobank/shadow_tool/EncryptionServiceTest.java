@@ -45,7 +45,7 @@ class EncryptionServiceTest {
         final var cipherText = decryptCipher.doFinal(Base64.decode(encryptedDifferences));
         final var expectedUnencryptedResult = new String(cipherText, StandardCharsets.UTF_8);
 
-        assertEquals(expectedUnencryptedResult, plainDifferences);
+        assertEquals(plainDifferences, expectedUnencryptedResult);
     }
 
     @Test
