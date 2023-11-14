@@ -4,12 +4,14 @@ import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static javax.crypto.Cipher.DECRYPT_MODE;
+import static javax.crypto.Cipher.ENCRYPT_MODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,9 +21,9 @@ class EncryptionServiceTest {
 
     static {
         try {
-            var keyPairGen = KeyPairGenerator.getInstance("RSA");
+            final var keyPairGen = KeyPairGenerator.getInstance("RSA");
             keyPairGen.initialize(2048);
-            var pair = keyPairGen.generateKeyPair();
+            final var pair = keyPairGen.generateKeyPair();
             PRIVATE_KEY = pair.getPrivate();
             PUBLIC_KEY = pair.getPublic();
         } catch (NoSuchAlgorithmException e) {
@@ -32,7 +34,7 @@ class EncryptionServiceTest {
     @Test
     void encryptAndDecrypt() throws Exception {
         final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        encryptCipher.init(Cipher.ENCRYPT_MODE, PUBLIC_KEY);
+        encryptCipher.init(ENCRYPT_MODE, PUBLIC_KEY);
         final var encryptionService = new DefaultEncryptionService(encryptCipher);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
                                      "'madrigals' collection changes :\n" +
@@ -41,11 +43,11 @@ class EncryptionServiceTest {
         final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
         //Decrypt and verify
         final var decryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        decryptCipher.init(Cipher.DECRYPT_MODE, PRIVATE_KEY);
+        decryptCipher.init(DECRYPT_MODE, PRIVATE_KEY);
         final var cipherText = decryptCipher.doFinal(Base64.decode(encryptedDifferences));
-        final var expectedUnencryptedResult = new String(cipherText, StandardCharsets.UTF_8);
+        final var result = new String(cipherText, UTF_8);
 
-        assertEquals(plainDifferences, expectedUnencryptedResult);
+        assertEquals(plainDifferences, result);
     }
 
     @Test
