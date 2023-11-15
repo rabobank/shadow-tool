@@ -11,11 +11,14 @@ import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +33,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,10 +78,10 @@ class ShadowFlowTest {
     @ParameterizedTest
     @MethodSource("executorArguments")
     void shouldAlwaysReturnCurrentFlowReactive(final ExecutorService executorService) {
-        var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
+        final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
                 .withExecutorService(executorService).build();
 
-        var result = shadowFlow.compare(
+        final var result = shadowFlow.compare(
                 Mono.just(dummyObjectA),
                 Mono.just(dummyObjectB)
         );
@@ -88,10 +92,10 @@ class ShadowFlowTest {
     @ParameterizedTest
     @MethodSource("executorArguments")
     void shouldCallCurrentFlowOnlyOnce(final ExecutorService executorService) {
-        var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
+        final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
                 .withExecutorService(executorService).build();
 
-        var callCounter = new AtomicInteger(0);
+        final var callCounter = new AtomicInteger(0);
         shadowFlow.compare(
                 Mono.fromCallable(() -> {
                     callCounter.incrementAndGet();
@@ -107,7 +111,7 @@ class ShadowFlowTest {
     void shouldAlwaysReturnCurrentFlowReactiveWithErrorInShadowFlow() {
         final List<Throwable> exceptions = new ArrayList<>();
 
-        var result = createBlockingShadowFlow(100).compare(
+        final var result = createBlockingShadowFlow(100).compare(
                 Mono.just(dummyObjectA),
                 Mono.<DummyObject>error(new Exception("Something happened in the shadow flow!")).doOnError(exceptions::add)
         );
@@ -117,13 +121,14 @@ class ShadowFlowTest {
         assertEquals("Something happened in the shadow flow!", exceptions.get(0).getMessage());
     }
 
+    @SuppressWarnings("ReactiveStreamsUnusedPublisher")
     @ParameterizedTest
     @MethodSource("executorArguments")
     void shouldAlwaysReturnCurrentFlowReactiveWithErrorInCurrentFlow(final ExecutorService executorService) {
-        var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
+        final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
                 .withExecutorService(executorService).build();
 
-        var result = shadowFlow.compare(
+        final var result = shadowFlow.compare(
                 Mono.error(new IllegalArgumentException("Something happened in the current flow!")),
                 Mono.just(dummyObjectB)
         );
@@ -143,7 +148,7 @@ class ShadowFlowTest {
 
     @Test
     void shouldRunShadowFlowAsynchronouslyByDefaultReactive() {
-        Executable shadowCall = () -> new ShadowFlowBuilder<DummyObject>(100).build().compare(
+        final Executable shadowCall = () -> new ShadowFlowBuilder<DummyObject>(100).build().compare(
                 Mono.just(dummyObjectA),
                 Mono.just(dummyObjectB).delayElement(Duration.ofSeconds(5))
         ).block(Duration.ofMillis(100));
@@ -164,8 +169,8 @@ class ShadowFlowTest {
 
     @Test
     void shouldRunShadowFlowMonoCollectionsWithVariables() {
-        var asyncCallA = List.of(dummyObjectA);
-        var asyncCallB = List.of(dummyObjectB);
+        final var asyncCallA = List.of(dummyObjectA);
+        final var asyncCallB = List.of(dummyObjectB);
 
         createBlockingShadowFlow(100).compareCollections(
                 Mono.just(asyncCallA),
@@ -179,8 +184,8 @@ class ShadowFlowTest {
     // Same test, slightly different input type to validate "? extends Collection<T>"
     @Test
     void shouldRunShadowFlowMonoWithCollectionExtendWithVariables() {
-        var asyncCallA = Mono.just(List.of(dummyObjectA));
-        var asyncCallB = Mono.just(List.of(dummyObjectB));
+        final var asyncCallA = Mono.just(List.of(dummyObjectA));
+        final var asyncCallB = Mono.just(List.of(dummyObjectB));
 
         createBlockingShadowFlow(100).compareCollections(
                 asyncCallA,
@@ -306,6 +311,46 @@ class ShadowFlowTest {
         );
 
         assertThatLogContains("The following differences were found: place, madrigals");
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {ArrayList.class, HashSet.class})
+    void typeOfCollectionListShouldBeTheResult(final Class<? extends Collection<?>> clazz) {
+        final var shadowFlow = createBlockingShadowFlow(100);
+
+        final var result = shadowFlow.compareCollections(
+                () -> createDummyCollectionOfType(clazz, dummyObjectA),
+                () -> createDummyCollectionOfType(clazz, dummyObjectB),
+                DummyObject.class
+        );
+
+        assertInstanceOf(clazz, result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {ArrayList.class, HashSet.class})
+    void typeOfCollectionShouldBeTheResultForMonos(final Class<? extends Collection<?>> clazz) {
+        final var asyncCallA = Mono.just(createDummyCollectionOfType(clazz, dummyObjectA));
+        final var asyncCallB = Mono.just(createDummyCollectionOfType(clazz, dummyObjectB));
+
+        final var result = createBlockingShadowFlow(100).compareCollections(
+                asyncCallA,
+                asyncCallB,
+                DummyObject.class
+        ).block();
+
+        assertInstanceOf(clazz, result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Collection<DummyObject> createDummyCollectionOfType(final Class<?> clazz, final DummyObject dummyObjectA) {
+        try {
+            final var collection = (Collection<DummyObject>) clazz.getDeclaredConstructor().newInstance();
+            collection.add(dummyObjectA);
+            return collection;
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private ShadowFlow<DummyObject> createBlockingShadowFlow(final int percentage) {
