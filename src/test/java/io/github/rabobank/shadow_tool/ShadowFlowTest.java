@@ -11,15 +11,13 @@ import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -33,7 +31,6 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -313,44 +310,30 @@ class ShadowFlowTest {
         assertThatLogContains("The following differences were found: place, madrigals");
     }
 
-    @ParameterizedTest
-    @ValueSource(classes = {ArrayList.class, HashSet.class})
-    void typeOfCollectionListShouldBeTheResult(final Class<? extends Collection<?>> clazz) {
+    @Test
+    void typeOfCollectionShouldBeTheResult() {
         final var shadowFlow = createBlockingShadowFlow(100);
 
-        final var result = shadowFlow.compareCollections(
-                () -> createDummyCollectionOfType(clazz, dummyObjectA),
-                () -> createDummyCollectionOfType(clazz, dummyObjectB),
+        final List<DummyObject> result = shadowFlow.compareCollections(
+                () -> List.of(dummyObjectA),
+                () -> List.of(dummyObjectB),
                 DummyObject.class
         );
 
-        assertInstanceOf(clazz, result);
+        assertEquals(result, List.of(dummyObjectA));
     }
 
-    @ParameterizedTest
-    @ValueSource(classes = {ArrayList.class, HashSet.class})
-    void typeOfCollectionShouldBeTheResultForMonos(final Class<? extends Collection<?>> clazz) {
-        final var asyncCallA = Mono.just(createDummyCollectionOfType(clazz, dummyObjectA));
-        final var asyncCallB = Mono.just(createDummyCollectionOfType(clazz, dummyObjectB));
+    @Test
+    void typeOfCollectionShouldBeTheResultForMonos() {
+        final var shadowFlow = createBlockingShadowFlow(100);
 
-        final var result = createBlockingShadowFlow(100).compareCollections(
-                asyncCallA,
-                asyncCallB,
+        final Set<DummyObject> result = shadowFlow.compareCollections(
+                Mono.just(Set.of(dummyObjectA)),
+                Mono.just(Set.of(dummyObjectB)),
                 DummyObject.class
         ).block();
 
-        assertInstanceOf(clazz, result);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Collection<DummyObject> createDummyCollectionOfType(final Class<?> clazz, final DummyObject dummyObjectA) {
-        try {
-            final var collection = (Collection<DummyObject>) clazz.getDeclaredConstructor().newInstance();
-            collection.add(dummyObjectA);
-            return collection;
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
+        assertEquals(result, Set.of(dummyObjectA));
     }
 
     private ShadowFlow<DummyObject> createBlockingShadowFlow(final int percentage) {
