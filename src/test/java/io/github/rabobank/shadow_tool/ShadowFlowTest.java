@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
 
 class ShadowFlowTest {
 
-    private static final Logger logger = ((Logger) LoggerFactory.getLogger(ShadowFlow.class));
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(ShadowFlow.class);
     private static ListAppender<ILoggingEvent> listAppender;
 
     private static final DummyObject dummyObjectA = new DummyObject("Bob", "Utrecht", List.of("Mirabel", "Bruno"));
