@@ -28,10 +28,11 @@ import static org.javers.core.diff.ListCompareAlgorithm.LEVENSHTEIN_DISTANCE;
  * @param <T> The model that the current and new flow should be mapped to for comparison.
  */
 public class ShadowFlow<T> {
+    private static final Logger logger = LoggerFactory.getLogger(ShadowFlow.class);
 
+    private static final Javers JAVERS = JaversBuilder.javers().withListCompareAlgorithm(LEVENSHTEIN_DISTANCE).build();
     private static final int ZERO = 0;
     private static final int HUNDRED = 100;
-    private static final Logger logger = LoggerFactory.getLogger(ShadowFlow.class);
     private static final String INSTANCE_PREFIX_FORMAT = "[instance=%s]";
     private static final String DEFAULT_INSTANCE_NAME = "default";
     private static final String CALLING_NEW_FLOW = "{} Calling new flow: {}";
@@ -44,6 +45,7 @@ public class ShadowFlow<T> {
     private final EncryptionService encryptionService;
     private final Scheduler scheduler;
     private final String instanceNameLogPrefix;
+    private final String instanceName;
 
     ShadowFlow(final int percentage,
                final ExecutorService executorService,
@@ -51,8 +53,8 @@ public class ShadowFlow<T> {
                final String instanceName) {
         this.percentage = percentage;
         this.encryptionService = encryptionService;
-        final var nonNullInstanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
-        instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, nonNullInstanceName);
+        this.instanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
+        instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, this.instanceName);
 
         if (executorService != null) {
             this.executorService = executorService;
@@ -63,9 +65,13 @@ public class ShadowFlow<T> {
         }
     }
 
-    private final Javers javers = JaversBuilder.javers()
-            .withListCompareAlgorithm(LEVENSHTEIN_DISTANCE)
-            .build();
+
+    /**
+     * @return Name of the Shadow Flow instance or "default" if not configured
+     */
+    public String getInstanceName() {
+        return instanceName;
+    }
 
     /**
      * This will always call currentFlow, and based on the percentage also call the
@@ -85,7 +91,7 @@ public class ShadowFlow<T> {
      */
     public T compare(final Supplier<T> currentFlow, final Supplier<T> newFlow) {
         final var currentFlowResponse = currentFlow.get();
-        doShadowFlow(() -> javers.compare(currentFlowResponse, newFlow.get()));
+        doShadowFlow(() -> JAVERS.compare(currentFlowResponse, newFlow.get()));
 
         return currentFlowResponse;
     }
@@ -112,7 +118,7 @@ public class ShadowFlow<T> {
      */
     public <C extends Collection<T>> C compareCollections(final Supplier<C> currentFlow, final Supplier<C> newFlow, final Class<T> clazz) {
         final var currentFlowResponse = currentFlow.get();
-        doShadowFlow(() -> javers.compareCollections(currentFlowResponse, newFlow.get(), clazz));
+        doShadowFlow(() -> JAVERS.compareCollections(currentFlowResponse, newFlow.get(), clazz));
 
         return currentFlowResponse;
     }
@@ -136,7 +142,7 @@ public class ShadowFlow<T> {
                 currentFlow.doOnNext(currentResponse -> {
                     logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
-                        newFlow.doOnNext(newResponse -> logDifferences(javers.compare(currentResponse, newResponse)))
+                        newFlow.doOnNext(newResponse -> logDifferences(JAVERS.compare(currentResponse, newResponse)))
                                 .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
@@ -168,7 +174,7 @@ public class ShadowFlow<T> {
                 currentFlow.doOnNext(currentResponse -> {
                     logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
                     if (callNewFlow) {
-                        newFlow.doOnNext(newResponse -> logDifferences(javers.compareCollections(currentResponse, newResponse, clazz)))
+                        newFlow.doOnNext(newResponse -> logDifferences(JAVERS.compareCollections(currentResponse, newResponse, clazz)))
                                 .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
@@ -233,6 +239,7 @@ public class ShadowFlow<T> {
     public static class ShadowFlowBuilder<T> {
 
         private final Logger logger = LoggerFactory.getLogger(ShadowFlowBuilder.class);
+        private static final IllegalStateException ENCRYPTION_SERVICE_ALREADY_CONFIGURED = new IllegalStateException("An encryption service has already been configured");
 
         private final int percentage;
 
@@ -277,11 +284,12 @@ public class ShadowFlow<T> {
          * @return This builder.
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
+            requireNull();
             try {
                 final var cipher = Cipher.getInstance(DEFAULT_ALGORITHM_MODE_PADDING);
                 cipher.init(Cipher.ENCRYPT_MODE, publicKey);
                 withCipher(cipher);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
             }
             return this;
@@ -297,11 +305,8 @@ public class ShadowFlow<T> {
          * @return This builder.
          */
         public ShadowFlowBuilder<T> withCipher(final Cipher cipher) {
-            try {
-                encryptionService = new DefaultEncryptionService(cipher);
-            } catch (Exception e) {
-                logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
-            }
+            requireNull();
+            encryptionService = new DefaultEncryptionService(cipher);
             return this;
         }
 
@@ -314,8 +319,15 @@ public class ShadowFlow<T> {
          * @return This builder.
          */
         public ShadowFlowBuilder<T> withEncryptionService(final EncryptionService encryptionService) {
+            requireNull();
             this.encryptionService = encryptionService;
             return this;
+        }
+
+        private void requireNull() {
+            if (encryptionService != null) {
+                throw ENCRYPTION_SERVICE_ALREADY_CONFIGURED;
+            }
         }
 
         /**
