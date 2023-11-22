@@ -8,7 +8,7 @@
     <artifactId>shadow-tool</artifactId>
     <groupId>io.github.rabobank</groupId>
     <packaging>jar</packaging>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.4.3-SNAPSHOT</version>
     <url>https://github.com/rabobank/shadow-tool</url>
     <description>This library allows you to safely test your migration from one back-end to another in production!
     </description>
