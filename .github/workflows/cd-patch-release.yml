@@ -16,7 +16,7 @@ jobs:
       - id: CD
         uses: ./.github/workflows/actions/cd
         with:
-          new-version: '\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}'
+          new-version: '\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}'
           gpg-key: ${{ secrets.GPG_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           server-username: ${{ secrets.OSSRH_USERNAME }}
