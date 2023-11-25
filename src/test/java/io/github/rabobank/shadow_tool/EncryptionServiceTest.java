@@ -4,14 +4,13 @@ import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
+import java.security.GeneralSecurityException;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.crypto.Cipher.DECRYPT_MODE;
-import static javax.crypto.Cipher.ENCRYPT_MODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -26,16 +25,14 @@ class EncryptionServiceTest {
             final var pair = keyPairGen.generateKeyPair();
             PRIVATE_KEY = pair.getPrivate();
             PUBLIC_KEY = pair.getPublic();
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Test
     void encryptAndDecrypt() throws Exception {
-        final var encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
-        encryptCipher.init(ENCRYPT_MODE, PUBLIC_KEY);
-        final var encryptionService = new DefaultEncryptionService(encryptCipher);
+        final var encryptionService = new PublicKeyEncryptionService(PUBLIC_KEY);
         final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
                                      "'madrigals' collection changes :\n" +
                                      "   1. 'Bruno' changed to 'Mirabel'\n" +
@@ -58,7 +55,7 @@ class EncryptionServiceTest {
                                      "'madrigals' collection changes :\n" +
                                      "   1. 'Bruno' changed to 'Mirabel'\n" +
                                      "   0. 'Bruno' added";
-        final var exception = assertThrows(SecurityException.class, () -> encryptionService.encrypt(plainDifferences));
-        assertEquals("java.lang.IllegalStateException: Cipher not initialized", exception.getMessage());
+        final var exception = assertThrows(IllegalStateException.class, () -> encryptionService.encrypt(plainDifferences));
+        assertEquals("Cipher not initialized", exception.getMessage());
     }
 }

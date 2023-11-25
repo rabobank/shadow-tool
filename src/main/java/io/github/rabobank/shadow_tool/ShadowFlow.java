@@ -37,9 +37,6 @@ public class ShadowFlow<T> {
     private static final String DEFAULT_INSTANCE_NAME = "default";
     private static final String CALLING_NEW_FLOW = "{} Calling new flow: {}";
     private static final String FAILED_TO_COMPARE = "{} Failed to run the shadow flow";
-    private static final String DEFAULT_ALGORITHM = "RSA";
-    private static final String DEFAULT_ALGORITHM_MODE_PADDING =
-            DEFAULT_ALGORITHM + "/ECB/OAEPWITHSHA-256ANDMGF1PADDING";
     private final int percentage;
     private final ExecutorService executorService;
     private final EncryptionService encryptionService;
@@ -285,13 +282,7 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             requireNull();
-            try {
-                final var cipher = Cipher.getInstance(DEFAULT_ALGORITHM_MODE_PADDING);
-                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-                withCipher(cipher);
-            } catch (final Exception e) {
-                logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
-            }
+            withEncryptionService(new PublicKeyEncryptionService(publicKey));
             return this;
         }
 
@@ -306,7 +297,7 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withCipher(final Cipher cipher) {
             requireNull();
-            encryptionService = new DefaultEncryptionService(cipher);
+            withEncryptionService(new DefaultEncryptionService(cipher));
             return this;
         }
 
@@ -320,7 +311,11 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryptionService(final EncryptionService encryptionService) {
             requireNull();
-            this.encryptionService = encryptionService;
+            try {
+                this.encryptionService = encryptionService;
+            } catch (final Exception e) {
+                logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
+            }
             return this;
         }
 
