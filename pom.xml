@@ -39,7 +39,7 @@
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
         <build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
         <javers-core.version>7.3.7</javers-core.version>
-        <spring-boot-dependencies-bom.version>3.1.5</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>3.1.7</spring-boot-dependencies-bom.version>
 
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
@@ -48,7 +48,7 @@
         <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
     </properties>
 
