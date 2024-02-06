@@ -26,14 +26,14 @@ The findings are reported using log statements.
 <dependency>
     <groupId>io.github.rabobank</groupId>
     <artifactId>shadow-tool</artifactId>
-    <version>1.4.5</version>
+    <version>${shadow-tool.version}</version> <!-- Make sure to check the latest version in Maven Central (above) -->
 </dependency>
 ```
 
 ### Gradle
 
 ```kotlin
-implementation("io.github.rabobank:shadow-tool:1.4.5")
+implementation("io.github.rabobank:shadow-tool:$version") // Make sure to check the latest version in Maven Central (above)
 ```
 
 ## Getting started
