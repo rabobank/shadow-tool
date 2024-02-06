@@ -4,10 +4,10 @@ This library allows you to safely test your migration from one back-end to anoth
 
 The Shadow Tool can be easily integrated into your Java/Kotlin project and allows you to compare the current back-end
 service your application is using against the new back-end you plan on using.
-Since it actually runs in the production environment (in the background), it helps ensure that:
+Since it actually runs in the production environment (in the background), it helps to ensure that:
 
-1. the connection towards your new back-end,
-2. the data quality coming from the new back-end,
+1. the connection towards your new back-end is working and gives you a response,
+2. the data coming from the new back-end is equal to the data coming from the current back-end,
 3. whether your code correctly maps the data of the new back-end to your existing domain.
 
 The tool is designed to be a plug-and-play solution that runs without impacting the functionality of your current production app.
