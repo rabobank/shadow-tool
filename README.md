@@ -11,7 +11,7 @@ Since it actually runs in the production environment (in the background), it hel
 3. whether your code correctly maps the data of the new back-end to your existing domain.
 
 The tool is designed to be a plug-and-play solution that runs without impacting the functionality of your current production app.
-When activated, as your app fetches data from your current back-end, it will also call the new back-end and compare 
+When activated, as your app fetches data from your current back-end, it will also call the new back-end and compare
 the data in parallel.
 This will be sampled based on a configured percentage to prevent overloading your application.
 The findings are reported using log statements.
@@ -134,7 +134,7 @@ implementation("io.github.rabobank:shadow-tool:$version") // Make sure to check 
        }
        ```
     3. **PublicKey encryption**: The differences are logged as encrypted values. This is recommended for sensitive data.
-        Example:
+       Example:
         ```java
        import io.github.rabobank.shadow_tool.ShadowFlow.ShadowFlowBuilder;
 
@@ -189,7 +189,7 @@ Be careful not to set this number too high for high-traffic applications.
 
 For a fair comparison, both services are required to return the same domain classes.
 In the example above, we called it `Dummy`.
-Also, since the secondary call is already mapped to the correct domain, completing the migration is straightforward: 
+Also, since the secondary call is already mapped to the correct domain, completing the migration is straightforward:
 simply replace the first call with the secondary call and remove the Shadow Tool code.
 
 You can distinguish the results of multiple shadow flows running in your application by setting an instance name.
@@ -225,7 +225,7 @@ class MyService {
 ## Logs
 
 The Shadow Tool logs any differences it finds between the two flows.
-It always logs the field names of the objects containing the differences, 
+It always logs the field names of the objects containing the differences,
 and it can also log the values when encryption is set up.
 You can expect output similar to the following:
 
@@ -244,4 +244,14 @@ The default algorithm for Public Key encryption is RSA with Electronic Codeblock
 
 ### Example of decrypting values of differences
 
-You can find an example in one of the tests: [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java).
+Here's an example decrypting the encrypted values using a Cipher (key and iv):
+```bash
+$ encrypted_text="6U8H2WSpEoXY1cFDS2Ze/63ohRVIS4t3A4I5E3RJeemrqXTWEUN6BlTawMVgyjQri9t8l6t9jotJmIEQOoc++C9W38Z8mYEAzU2UzvGm50AMcFqEXheSBEw7c3LZFRoE"
+$ key="2d4a75512e73b8761400b49aff747af368a18de82d3865fe597efaf6d11053f9"
+$ iv="ebc3a59998fe444066b5fd819578d564"
+$ echo -n $encrypted_text | openssl enc -d -aes-256-cbc -base64 -nosalt -A -K $key -iv $iv
+'firstName' changed: 'terry' -> 'Terry'
+'lastName' changed: 'pratchett' -> 'Pratchett'
+```
+
+Or you can find an example in one of the tests: [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java).
