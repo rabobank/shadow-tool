@@ -244,4 +244,14 @@ The default algorithm for Public Key encryption is RSA with Electronic Codeblock
 
 ### Example of decrypting values of differences
 
-You can find an example in one of the tests: [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java).
+Here's an example decrypting the encrypted values using a Cipher (key and iv):
+```bash
+$ encrypted_text="6U8H2WSpEoXY1cFDS2Ze/63ohRVIS4t3A4I5E3RJeemrqXTWEUN6BlTawMVgyjQri9t8l6t9jotJmIEQOoc++C9W38Z8mYEAzU2UzvGm50AMcFqEXheSBEw7c3LZFRoE"
+$ key="2d4a75512e73b8761400b49aff747af368a18de82d3865fe597efaf6d11053f9"
+$ iv="ebc3a59998fe444066b5fd819578d564"
+$ echo -n $encrypted_text | openssl enc -d -aes-256-cbc -base64 -nosalt -A -K $key -iv $iv
+'firstName' changed: 'terry' -> 'Terry'
+'lastName' changed: 'pratchett' -> 'Pratchett'
+```
+
+Or you can find an example in one of the tests: [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java).
