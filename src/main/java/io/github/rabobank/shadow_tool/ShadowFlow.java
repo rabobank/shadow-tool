@@ -141,6 +141,7 @@ public class ShadowFlow<T> {
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(JAVERS.compare(currentResponse, newResponse)))
                                 .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
+                                .onErrorStop()
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
                                 .subscribe();
@@ -173,6 +174,7 @@ public class ShadowFlow<T> {
                     if (callNewFlow) {
                         newFlow.doOnNext(newResponse -> logDifferences(JAVERS.compareCollections(currentResponse, newResponse, clazz)))
                                 .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
+                                .onErrorStop()
                                 .contextWrite(contextView)
                                 .subscribeOn(scheduler)
                                 .subscribe();
