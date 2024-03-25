@@ -39,7 +39,7 @@
         <bcprov-jdk18on.version>1.77</bcprov-jdk18on.version>
         <build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
         <javers-core.version>7.4.1</javers-core.version>
-        <spring-boot-dependencies-bom.version>3.1.9</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>3.1.10</spring-boot-dependencies-bom.version>
 
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.2.1</maven-gpg-plugin.version>
