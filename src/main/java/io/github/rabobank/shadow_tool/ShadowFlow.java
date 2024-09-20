@@ -16,6 +16,7 @@ import javax.crypto.Cipher;
 import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,14 +39,14 @@ public class ShadowFlow<T> {
     private static final String CALLING_NEW_FLOW = "{} Calling new flow: {}";
     private static final String FAILED_TO_COMPARE = "{} Failed to run the shadow flow";
     private final int percentage;
-    private final ExecutorService executorService;
+    private final Executor executor;
     private final EncryptionService encryptionService;
     private final Scheduler scheduler;
     private final String instanceNameLogPrefix;
     private final String instanceName;
 
     ShadowFlow(final int percentage,
-               final ExecutorService executorService,
+               final Executor executor,
                final EncryptionService encryptionService,
                final String instanceName) {
         this.percentage = percentage;
@@ -53,11 +54,11 @@ public class ShadowFlow<T> {
         this.instanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
         instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, this.instanceName);
 
-        if (executorService != null) {
-            this.executorService = executorService;
-            scheduler = Schedulers.fromExecutor(executorService);
+        if (executor != null) {
+            this.executor = executor;
+            scheduler = Schedulers.fromExecutor(executor);
         } else {
-            this.executorService = Executors.newCachedThreadPool();
+            this.executor = Executors.newCachedThreadPool();
             scheduler = Schedulers.boundedElastic();
         }
     }
@@ -189,7 +190,7 @@ public class ShadowFlow<T> {
 
         if (callNewFlow) {
             try {
-                executorService.submit(() -> logDifferenceWithMdc(diffSupplier, contextMap));
+                executor.execute(() -> logDifferenceWithMdc(diffSupplier, contextMap));
             } catch (final Exception e) {
                 logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, e);
             }
@@ -242,14 +243,14 @@ public class ShadowFlow<T> {
 
         private final int percentage;
 
-        private ExecutorService executorService;
+        private Executor executor;
 
         private EncryptionService encryptionService;
 
         private String instanceName;
 
         /**
-         * Creates a new instance of a ShadowFlowBuilder which is used to configure and create a ShadowFlow instance.
+         * Creates a new instance of a {@link ShadowFlowBuilder} which is used to configure and create a {@link ShadowFlow} instance.
          *
          * @param percentage Percentage of how many calls should be compared in the shadow flow.
          *                   This should be in the range of 0-100.
@@ -260,27 +261,44 @@ public class ShadowFlow<T> {
         }
 
         /**
-         * This allows you to configure your own ExecutorService.
+         * This allows you to configure your own {@link ExecutorService}.
          *
-         * @param executorService The ExecutorService which will be used to ensure that the second service call and the
+         * @param executorService The {@link ExecutorService} which will be used to ensure that the second service call and the
          *                        comparing mechanism is executed on a different thread. This ensures that the main flow
          *                        will not be impacted by the new flow.
-         *                        By default, a CachedThreadPool will be created.
-         * @return This builder.
+         *                        By default, {@link Executors#newCachedThreadPool()} will be used.
+         * @return This builder
+         * @deprecated Use {@link #withExecutor(Executor) withExecutor} instead.
          */
+        @Deprecated
         public ShadowFlowBuilder<T> withExecutorService(final ExecutorService executorService) {
-            this.executorService = executorService;
+            return withExecutor(executorService);
+        }
+
+        /**
+         * This allows you to configure your own {@link Executor}. This could also be used to configure a Virtual Thread Executor.
+         *
+         * @param executor The {@link Executor} which will be used to ensure that the second service call and the
+         *                        comparing mechanism is executed on a different thread. This ensures that the main flow
+         *                        will not be impacted by the new flow.
+         *                        By default, {@link Executors#newCachedThreadPool()} will be used.
+         * @return This builder
+         */
+        public ShadowFlowBuilder<T> withExecutor(final Executor executor) {
+            this.executor = executor;
             return this;
         }
 
         /**
          * This configures the shadow flow to log the values of the differences found between the two flows.
-         * Since the data is potentially sensitive, encryption is required. Mutually exclusive with
-         * {@link ShadowFlowBuilder#withCipher(Cipher cipher) withCipher }. This method will use a cipher with
-         * RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING
+         * Since the data is potentially sensitive, encryption is required.
+         * This method will use a cipher with {@code RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING}.
+         * <p>
+         * Mutually exclusive with {@link #withCipher(Cipher cipher) withCipher} and
+         * {@link #withEncryptionService(EncryptionService encryptionService) withEncryptionService}.
          *
          * @param publicKey The public RSA key used for encryption, should be at least 2048 bits.
-         * @return This builder.
+         * @return This builder
          */
         public ShadowFlowBuilder<T> withEncryption(final PublicKey publicKey) {
             requireNull();
@@ -291,11 +309,13 @@ public class ShadowFlow<T> {
         /**
          * This configures the shadow flow to log the values of the differences found between the two flows.
          * Since the data is potentially sensitive, encryption is required. Provide your cryptographic cipher
-         * for this encryption. Mutually exclusive with
-         * {@link ShadowFlowBuilder#withEncryption(PublicKey publicKey) withEncryption }
+         * for this encryption.
+         * <p>
+         * Mutually exclusive with {@link #withEncryption(PublicKey publicKey) withEncryption} and
+         * {@link #withEncryptionService(EncryptionService encryptionService) withEncryptionService}.
          *
          * @param cipher The cipher that will do the encryption.
-         * @return This builder.
+         * @return This builder
          */
         public ShadowFlowBuilder<T> withCipher(final Cipher cipher) {
             requireNull();
@@ -306,10 +326,13 @@ public class ShadowFlow<T> {
         /**
          * This configures the shadow flow to log the values of the differences found between the two flows using
          * the supplied {@link EncryptionService} implementation. Since the data is potentially sensitive,
-         * encryption is required. Mutually exclusive with {@link ShadowFlowBuilder#withCipher(Cipher cipher) withCipher }.
+         * encryption is required.
+         * <p>
+         * Mutually exclusive with {@link #withCipher(Cipher cipher) withCipher} and
+         * {@link #withEncryption(PublicKey publicKey) withEncryption}.
          *
          * @param encryptionService {@link EncryptionService} to be used for encryption
-         * @return This builder.
+         * @return This builder
          */
         public ShadowFlowBuilder<T> withEncryptionService(final EncryptionService encryptionService) {
             requireNull();
@@ -331,7 +354,7 @@ public class ShadowFlow<T> {
          * If the shadow tool is used for two separate use-cases in one application, this allows you to distinguish them.
          *
          * @param instanceName The name of the instance which will end up in the logs.
-         * @return This builder.
+         * @return This builder
          */
         public ShadowFlowBuilder<T> withInstanceName(final String instanceName) {
             this.instanceName = instanceName;
@@ -344,7 +367,7 @@ public class ShadowFlow<T> {
          * @return New instance of ShadowFlow
          */
         public ShadowFlow<T> build() {
-            return new ShadowFlow<>(percentage, executorService, encryptionService, instanceName);
+            return new ShadowFlow<>(percentage, executor, encryptionService, instanceName);
         }
 
         private int validatePercentage(final int percentage) {
