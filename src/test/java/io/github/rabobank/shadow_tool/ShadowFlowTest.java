@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -28,15 +29,10 @@ import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ShadowFlowTest {
 
@@ -280,12 +276,28 @@ class ShadowFlowTest {
     }
 
     @Test
-    void shouldNotFailOnErrorWhenSubmittingATask() {
+    void shouldNotFailOnErrorWhenSubmittingATaskUsingDeprecatedExecutorService() {
         final var mockedExecutorService = mock(ExecutorService.class);
-        when(mockedExecutorService.submit(any(Runnable.class)))
-                .thenThrow(RejectedExecutionException.class);
+        doThrow(RejectedExecutionException.class).when(mockedExecutorService).execute(any(Runnable.class));
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
                 .withExecutorService(mockedExecutorService)
+                .build();
+
+        final var result = shadowFlow.compare(
+                () -> dummyObjectA,
+                () -> dummyObjectB
+        );
+
+        assertEquals(dummyObjectA, result);
+        assertThatLogContains("Failed to run the shadow flow");
+    }
+
+    @Test
+    void shouldNotFailOnErrorWhenSubmittingATask() {
+        final var mockedExecutor = mock(Executor.class);
+        doThrow(RejectedExecutionException.class).when(mockedExecutor).execute(any(Runnable.class));
+        final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
+                .withExecutor(mockedExecutor)
                 .build();
 
         final var result = shadowFlow.compare(
