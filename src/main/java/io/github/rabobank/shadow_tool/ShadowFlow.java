@@ -270,7 +270,7 @@ public class ShadowFlow<T> {
          * @return This builder
          * @deprecated Use {@link #withExecutor(Executor) withExecutor} instead.
          */
-        @Deprecated
+        @Deprecated(since = "1.5.0", forRemoval = true)
         public ShadowFlowBuilder<T> withExecutorService(final ExecutorService executorService) {
             return withExecutor(executorService);
         }
