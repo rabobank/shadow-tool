@@ -20,7 +20,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/rabobank/shadow-tool.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:rabobank/shadow-tool.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/rabobank/shadow-tool</developerConnection>
         <url>https://github.com/rabobank/shadow-tool</url>
       <tag>shadow-tool-1.5.0</tag>
   </scm>
