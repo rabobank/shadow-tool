@@ -1,0 +1,29 @@
+<settings>
+    <servers>
+        <server>
+            <id>central</id>
+            <username>${USERNAME}</username>
+            <password>${PASSWORD}</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>defaultprofile</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>http://central.maven.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>defaultprofile</activeProfile>
+    </activeProfiles>
+</settings>
