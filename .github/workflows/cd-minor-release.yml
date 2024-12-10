@@ -19,8 +19,8 @@ jobs:
           new-version: '\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.0'
           gpg-key: ${{ secrets.GPG_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          server-username: ${{ secrets.OSSRH_USERNAME }}
-          server-token: ${{ secrets.OSSRH_TOKEN }}
+          server-username: ${{ secrets.MAVEN_USERNAME }}
+          server-token: ${{ secrets.MAVEN_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version-push-pat: ${{ secrets.VERSION_PUSH_PAT }}
           bot-mail: ${{ secrets.BOT_MAIL }}
