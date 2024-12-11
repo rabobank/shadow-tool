@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -8,7 +7,7 @@
     <artifactId>shadow-tool</artifactId>
     <groupId>io.github.rabobank</groupId>
     <packaging>jar</packaging>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.5.2-SNAPSHOT</version>
     <url>https://github.com/rabobank/shadow-tool</url>
     <description>This library allows you to safely test your migration from one back-end to another in production!
     </description>
@@ -22,8 +21,9 @@
 
     <scm>
         <connection>scm:git:git://github.com/rabobank/shadow-tool.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:rabobank/shadow-tool.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/rabobank/shadow-tool</developerConnection>
         <url>https://github.com/rabobank/shadow-tool</url>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
@@ -41,25 +41,21 @@
         <javers-core.version>7.7.0</javers-core.version>
         <spring-boot-dependencies-bom.version>3.4.0</spring-boot-dependencies-bom.version>
 
+        <central-publishing-maven-plugin.version>0.6.0</central-publishing-maven-plugin.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
-        <maven-javadoc-plugin.version>3.11.1</maven-javadoc-plugin.version>
+        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
         <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <maven.compiler.release>17</maven.compiler.release>
-        <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
     </properties>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>central</id>
+            <url>https://central.maven.org/maven2</url>
         </repository>
     </distributionManagement>
 
@@ -161,14 +157,13 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${nexus-staging-maven-plugin.version}</version>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
             <plugin>
