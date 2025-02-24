@@ -42,7 +42,7 @@
         <spring-boot-dependencies-bom.version>3.4.2</spring-boot-dependencies-bom.version>
 
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
         <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
