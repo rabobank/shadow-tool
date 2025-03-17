@@ -6,9 +6,18 @@ updates:
       interval: "monthly"
     labels:
       - "actions-update"
+    groups:
+      actions-deps:
+        patterns:
+          - "*"
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "weekly"
     labels:
       - "dependency-update"
+    groups:
+      dev-deps:
+        dependency-type: "development"
+      prod-deps:
+        dependency-type: "production"
