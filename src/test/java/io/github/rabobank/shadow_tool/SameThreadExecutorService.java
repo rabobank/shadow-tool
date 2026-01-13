@@ -1,5 +1,7 @@
 package io.github.rabobank.shadow_tool;
 
+import org.jspecify.annotations.NonNull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
@@ -29,12 +31,13 @@ public class SameThreadExecutorService extends AbstractExecutorService {
     }
 
     @Override
-    public boolean awaitTermination(final long timeout, final TimeUnit unit) {
+    public boolean awaitTermination(final long timeout, final @NonNull TimeUnit unit) {
         shutdown(); // TODO ok to call shutdown? what if the client never called shutdown???
         return terminated;
     }
 
     @Override
+    @NonNull
     public List<Runnable> shutdownNow() {
         return Collections.emptyList();
     }
