@@ -10,10 +10,11 @@ class NoopEncryptionServiceTest {
     @Test
     void encryptAndDecrypt() {
         final var encryptionService = NoopEncryptionService.INSTANCE;
-        final var plainDifferences = "'place' changed: 'Dintelooord' -> 'Dinteloord'\n" +
-                                     "'madrigals' collection changes :\n" +
-                                     "   1. 'Bruno' changed to 'Mirabel'\n" +
-                                     "   0. 'Bruno' added";
+        final var plainDifferences = """
+                'place' changed: 'Dintelooord' -> 'Dinteloord'
+                'madrigals' collection changes :
+                   1. 'Bruno' changed to 'Mirabel'
+                   0. 'Bruno' added""";
         final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
         //Decrypt and verify
         final var decoded = Base64.decode(encryptedDifferences);
