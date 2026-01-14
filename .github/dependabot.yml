@@ -34,8 +34,7 @@ updates:
         dependency-type: "development"
       prod-deps:
         dependency-type: "production"
-    allow:
+    ignore:
       - dependency-name: "org.springframework.boot:spring-boot*"
-        # Only allow 3.5.x updates
         versions:
-          - "3.5.x"
+          - "4.x"
