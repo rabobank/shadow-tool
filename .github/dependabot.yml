@@ -22,3 +22,22 @@ updates:
         dependency-type: "development"
       prod-deps:
         dependency-type: "production"
+  - package-ecosystem: "maven"
+    directory: "/"
+    target-branch: "release/1.7.x"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependency-update"
+    groups:
+      dev-deps:
+        dependency-type: "development"
+      prod-deps:
+        dependency-type: "production"
+    allow:
+      - dependency-type: "all"
+        dependency-name: "org.springframework.boot:spring-boot*"
+        versioning-strategy: "increase"
+        # Only allow 3.5.x updates
+        versions:
+          - "3.5.x"
