@@ -79,5 +79,6 @@ runs:
         github_token: ${{ inputs.version-push-pat }}
         author_email: ${{ inputs.bot-mail }}
         author_name: skunkworks-rabot
+        branch: 'release/1.7.x'
     - name: Maven Dependency Tree Dependency Submission
       uses: advanced-security/maven-dependency-submission-action@v5.0.0
