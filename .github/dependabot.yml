@@ -22,10 +22,3 @@ updates:
         dependency-type: "development"
       prod-deps:
         dependency-type: "production"
-    allow:
-      - dependency-type: "all"
-        dependency-name: "org.springframework.boot:spring-boot*"
-        versioning-strategy: "increase"
-        # Only allow 3.5.x updates
-        versions:
-          - "3.5.x"
