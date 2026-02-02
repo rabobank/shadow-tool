@@ -31,7 +31,7 @@ runs:
   using: composite
   steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.1
+      uses: actions/checkout@v6.0.2
       with:
         persist-credentials: false # use GITHUB_TOKEN, instead of personal token
         fetch-depth: 0 # otherwise, pushing refs to dest repo fails
