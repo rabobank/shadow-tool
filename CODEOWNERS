@@ -5,4 +5,4 @@
 # the repo. Unless a later match takes precedence,
 # @rabobank/team-skunkworks will be requested for
 # review when someone opens a pull request.
-*   @rabobank/team-skunkworks
+*   @rabobank/team-skunkworks @skunkworks-rabot
