@@ -13,7 +13,7 @@ jobs:
   dependabot:
     name: Auto-merge Dependabot PRs
     runs-on: ubuntu-latest
-    # Only run for Dependabot PRs (pull_request_target context)
+    # Only run for Dependabot PRs
     if: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.user.login == 'dependabot[bot]' }}
 
     steps:
@@ -21,22 +21,22 @@ jobs:
         id: metadata
         uses: dependabot/fetch-metadata@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.VERSION_PUSH_PAT }}
 
       - name: Approve PR
         if: ${{ github.event.pull_request.draft == false }}
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.VERSION_PUSH_PAT }}
 
-      - name: Enable auto-merge (squash)
+      - name: Enable auto-merge (rebase)
         if: >-
           ${{ github.event.pull_request.draft == false &&
               (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
                steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
                steps.metadata.outputs.update-type == 'version-update:semver-major') }}
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: gh pr merge --auto --rebase "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.VERSION_PUSH_PAT }}
