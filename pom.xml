@@ -36,7 +36,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <bcprov-jdk18on.version>1.83</bcprov-jdk18on.version>
+        <bcprov-jdk18on.version>1.84</bcprov-jdk18on.version>
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
         <javers-core.version>7.11.0</javers-core.version>
         <spring-boot-dependencies-bom.version>3.5.13</spring-boot-dependencies-bom.version>
