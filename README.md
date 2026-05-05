@@ -2,6 +2,8 @@
 
 This library allows you to safely test your migration from one back-end to another in production!
 
+> This artifact contains the core Shadow Tool implementation only. If you are using Spring Boot, configure Shadow Tool via the **[Shadow Tool Spring Boot Starter](https://github.com/rabobank/shadow-tool-spring-boot-starter/)**: `io.github.rabobank.shadow_tool:shadow-tool-spring-boot-starter`.
+
 The Shadow Tool can be easily integrated into your Java/Kotlin project and allows you to compare the current back-end
 service your application is using against the new back-end you plan on using.
 Since it actually runs in the production environment (in the background), it helps to ensure that:
@@ -18,9 +20,12 @@ The findings are reported using log statements.
 
 ## Installation
 
+Use this dependency when you want to wire and use Shadow Tool directly in application code.
+For Spring Boot applications, configuration should be done through the [Shadow Tool Spring Boot Starter](https://github.com/rabobank/shadow-tool-spring-boot-starter/) dependency: `io.github.rabobank.shadow_tool:shadow-tool-spring-boot-starter`.
+
 ### Maven
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.rabobank/shadow-tool/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.rabobank/shadow-tool)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.rabobank/shadow-tool)](https://central.sonatype.com/artifact/io.github.rabobank/shadow-tool)
 
 ```xml
 <dependency>
@@ -38,9 +43,12 @@ implementation("io.github.rabobank:shadow-tool:$version") // Make sure to check 
 
 ## Getting started
 
+If you use Spring Boot, set up configuration via the [Shadow Tool Spring Boot Starter](https://github.com/rabobank/shadow-tool-spring-boot-starter/).
+The steps below show manual usage of the core implementation in this repository.
+
 1. **Important:** In order to see the differences in your logs, you have to add `slf4j-api` to your dependencies. By
-   default, only fieldnames (keys) are logged when the values differ.
-   To see the what exactly is different, encryption is required. Proceed to step 2 for setting up encryption.
+   default, only field names (keys) are logged when the values differ.
+   To see what exactly is different, encryption is required. Proceed to step 2 for setting up encryption.
 2. You have 3 encryption options:
     1. **Noop encryption**: By setting up a `NoopEncryptionService`, the differences are logged as `Base64` encoded
        text. This is not recommended for sensitive data.  
@@ -246,10 +254,10 @@ The default algorithm for Public Key encryption is RSA with Electronic Codeblock
 
 Here's an example decrypting the encrypted values using a Cipher (key and iv):
 ```bash
-$ encrypted_text="6U8H2WSpEoXY1cFDS2Ze/63ohRVIS4t3A4I5E3RJeemrqXTWEUN6BlTawMVgyjQri9t8l6t9jotJmIEQOoc++C9W38Z8mYEAzU2UzvGm50AMcFqEXheSBEw7c3LZFRoE"
-$ key="2d4a75512e73b8761400b49aff747af368a18de82d3865fe597efaf6d11053f9"
-$ iv="ebc3a59998fe444066b5fd819578d564"
-$ echo -n $encrypted_text | openssl enc -d -aes-256-cbc -base64 -nosalt -A -K $key -iv $iv
+encrypted_text="6U8H2WSpEoXY1cFDS2Ze/63ohRVIS4t3A4I5E3RJeemrqXTWEUN6BlTawMVgyjQri9t8l6t9jotJmIEQOoc++C9W38Z8mYEAzU2UzvGm50AMcFqEXheSBEw7c3LZFRoE"
+key="2d4a75512e73b8761400b49aff747af368a18de82d3865fe597efaf6d11053f9"
+iv="ebc3a59998fe444066b5fd819578d564"
+echo -n $encrypted_text | openssl enc -d -aes-256-cbc -base64 -nosalt -A -K $key -iv $iv
 'firstName' changed: 'terry' -> 'Terry'
 'lastName' changed: 'pratchett' -> 'Pratchett'
 ```

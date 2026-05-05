@@ -30,6 +30,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Force JavaScript actions to Node 24
+      shell: bash
+      run: echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true" >> "$GITHUB_ENV"
     - name: Checkout
       uses: actions/checkout@v6.0.2
       with:
@@ -56,28 +59,44 @@ runs:
         MAVEN_USERNAME: ${{ inputs.server-username }}
         MAVEN_TOKEN: ${{ inputs.server-token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
-    - name: Set Release version env variable
+    - name: Commit & Push release version
       shell: bash
       run: |
-        echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+        git config user.email "${{ inputs.bot-mail }}"
+        git config user.name "skunkworks-rabot"
+        git add pom.xml
+        if git diff --cached --quiet; then
+          echo "::error::No release version change found in pom.xml"
+          exit 1
+        fi
+        git commit -m "chore: release ${{ inputs.new-version }}"
+        git push "https://x-access-token:${{ inputs.version-push-pat }}@github.com/${{ github.repository }}.git" "HEAD:${{ github.ref_name }}"
+    - name: Set release metadata env variables
+      shell: bash
+      run: |
+        echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_ENV"
+        echo "RELEASE_COMMIT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
+      shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-      with:
-        tag_name: ${{ env.RELEASE_VERSION }}
-        release_name: Release ${{ env.RELEASE_VERSION }}
-        draft: true
-        prerelease: false
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        gh release create "${RELEASE_VERSION}" \
+          --title "Release ${RELEASE_VERSION}" \
+          --target "${RELEASE_COMMIT_SHA}" \
+          --draft
     - name: Prepare next release version
       shell: bash
       run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
-    - name: Commit & Push changes
-      uses: actions-js/push@master
-      with:
-        github_token: ${{ inputs.version-push-pat }}
-        author_email: ${{ inputs.bot-mail }}
-        author_name: skunkworks-rabot
+    - name: Commit & Push next snapshot version
+      shell: bash
+      run: |
+        git add pom.xml
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+          exit 0
+        fi
+        git commit -m "chore: prepare next release version"
+        git push "https://x-access-token:${{ inputs.version-push-pat }}@github.com/${{ github.repository }}.git" "HEAD:${{ github.ref_name }}"
     - name: Maven Dependency Tree Dependency Submission
       uses: advanced-security/maven-dependency-submission-action@v5.0.0
