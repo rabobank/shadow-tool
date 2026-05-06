@@ -69,7 +69,7 @@ runs:
           echo "::error::No release version change found in pom.xml"
           exit 1
         fi
-        git commit -m "chore: release ${{ inputs.new-version }}"
+        git commit -m "Release ${{ inputs.new-version }}"
         git push "https://x-access-token:${{ inputs.version-push-pat }}@github.com/${{ github.repository }}.git" "HEAD:${{ github.ref_name }}"
     - name: Set release metadata env variables
       shell: bash
@@ -96,7 +96,7 @@ runs:
           echo "No changes to commit"
           exit 0
         fi
-        git commit -m "chore: prepare next release version"
+        git commit -m "Prepare next release version"
         git push "https://x-access-token:${{ inputs.version-push-pat }}@github.com/${{ github.repository }}.git" "HEAD:${{ github.ref_name }}"
     - name: Maven Dependency Tree Dependency Submission
       uses: advanced-security/maven-dependency-submission-action@v5.0.0
