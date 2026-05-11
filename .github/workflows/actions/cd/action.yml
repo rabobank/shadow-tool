@@ -69,7 +69,8 @@ runs:
           echo "::error::No release version change found in pom.xml"
           exit 1
         fi
-        git commit -m "Release ${{ inputs.new-version }}"
+        RELEASE_VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+        git commit -m "Release ${RELEASE_VERSION}"
         git push "https://x-access-token:${{ inputs.version-push-pat }}@github.com/${{ github.repository }}.git" "HEAD:${{ github.ref_name }}"
     - name: Set release metadata env variables
       shell: bash
