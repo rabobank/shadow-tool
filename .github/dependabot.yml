@@ -22,6 +22,10 @@ updates:
         dependency-type: "development"
       prod-deps:
         dependency-type: "production"
+    ignore:
+      - dependency-name: "org.springframework.boot:spring-boot*"
+        versions:
+          - ">=4.2.0"
   - package-ecosystem: "github-actions"
     directories:
       - ".github/**/*"
