@@ -25,7 +25,7 @@ updates:
   - package-ecosystem: "github-actions"
     directories:
       - ".github/**/*"
-    target-branch: "release/1.7.x"
+    target-branch: "release/1.10.x"
     schedule:
       interval: "monthly"
     labels:
@@ -36,7 +36,7 @@ updates:
           - "*"
   - package-ecosystem: "maven"
     directory: "/"
-    target-branch: "release/1.7.x"
+    target-branch: "release/1.10.x"
     schedule:
       interval: "weekly"
     labels:
@@ -49,4 +49,4 @@ updates:
     ignore:
       - dependency-name: "org.springframework.boot:spring-boot*"
         versions:
-          - ">=4.0.0"
+          - ">=4.1.0"
