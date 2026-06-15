@@ -17,7 +17,6 @@ import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
@@ -258,21 +257,6 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder(final int percentage) {
             this.percentage = validatePercentage(percentage);
-        }
-
-        /**
-         * This allows you to configure your own {@link ExecutorService}.
-         *
-         * @param executorService The {@link ExecutorService} which will be used to ensure that the second service call and the
-         *                        comparing mechanism is executed on a different thread. This ensures that the main flow
-         *                        will not be impacted by the new flow.
-         *                        By default, {@link Executors#newCachedThreadPool()} will be used.
-         * @return This builder
-         * @deprecated Use {@link #withExecutor(Executor) withExecutor} instead.
-         */
-        @Deprecated(since = "1.5.0", forRemoval = true)
-        public ShadowFlowBuilder<T> withExecutorService(final ExecutorService executorService) {
-            return withExecutor(executorService);
         }
 
         /**
