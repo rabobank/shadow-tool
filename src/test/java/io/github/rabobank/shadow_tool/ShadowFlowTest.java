@@ -58,7 +58,7 @@ class ShadowFlowTest {
     @MethodSource("executorArguments")
     void shouldAlwaysReturnCurrentFlow(final ExecutorService executorService) {
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
-                .withExecutorService(executorService).build();
+                .withExecutor(executorService).build();
 
         final var result = shadowFlow.compare(
                 () -> dummyObjectA,
@@ -72,7 +72,7 @@ class ShadowFlowTest {
     @MethodSource("executorArguments")
     void shouldAlwaysReturnCurrentFlowReactive(final ExecutorService executorService) {
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
-                .withExecutorService(executorService).build();
+                .withExecutor(executorService).build();
 
         final var result = shadowFlow.compare(
                 Mono.just(dummyObjectA),
@@ -86,7 +86,7 @@ class ShadowFlowTest {
     @MethodSource("executorArguments")
     void shouldCallCurrentFlowOnlyOnce(final ExecutorService executorService) {
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
-                .withExecutorService(executorService).build();
+                .withExecutor(executorService).build();
 
         final var callCounter = new AtomicInteger(0);
         shadowFlow.compare(
@@ -119,7 +119,7 @@ class ShadowFlowTest {
     @MethodSource("executorArguments")
     void shouldAlwaysReturnCurrentFlowReactiveWithErrorInCurrentFlow(final ExecutorService executorService) {
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
-                .withExecutorService(executorService).build();
+                .withExecutor(executorService).build();
 
         final var result = shadowFlow.compare(
                 Mono.error(new IllegalArgumentException("Something happened in the current flow!")),
@@ -234,7 +234,7 @@ class ShadowFlowTest {
     @Test
     void verifyInstanceNameCanBeOverridden() {
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
-                .withExecutorService(new SameThreadExecutorService())
+                .withExecutor(new SameThreadExecutorService())
                 .withInstanceName("custom-identity")
                 .build();
 
@@ -280,7 +280,7 @@ class ShadowFlowTest {
         final var mockedExecutorService = mock(ExecutorService.class);
         doThrow(RejectedExecutionException.class).when(mockedExecutorService).execute(any(Runnable.class));
         final var shadowFlow = new ShadowFlowBuilder<DummyObject>(100)
-                .withExecutorService(mockedExecutorService)
+                .withExecutor(mockedExecutorService)
                 .build();
 
         final var result = shadowFlow.compare(
@@ -350,7 +350,7 @@ class ShadowFlowTest {
 
     private ShadowFlow<DummyObject> createBlockingShadowFlow(final int percentage) {
         return new ShadowFlowBuilder<DummyObject>(percentage)
-                .withExecutorService(new SameThreadExecutorService())
+                .withExecutor(new SameThreadExecutorService())
                 .build();
     }
 
