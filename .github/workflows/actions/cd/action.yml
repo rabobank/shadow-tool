@@ -34,7 +34,7 @@ runs:
       shell: bash
       run: echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true" >> "$GITHUB_ENV"
     - name: Checkout
-      uses: actions/checkout@v6.0.3
+      uses: actions/checkout@v7.0.0
       with:
         persist-credentials: false # use GITHUB_TOKEN, instead of personal token
         fetch-depth: 0 # otherwise, pushing refs to dest repo fails
