@@ -82,7 +82,7 @@ public class ShadowFlow<T> {
      *
      * @param currentFlow A supplier that returns the result of the service call
      *                    that you currently have.
-     * @param newFlow     A supplier that return the result of the new service call
+     * @param newFlow     A supplier that returns the result of the new service call
      *                    that you want to start using.
      * @return This will always return the value of currentFlow supplier.
      */
@@ -107,7 +107,7 @@ public class ShadowFlow<T> {
      *
      * @param currentFlow A supplier that returns the result of the service call
      *                    that you currently have.
-     * @param newFlow     A supplier that return the result of the new service call
+     * @param newFlow     A supplier that returns the result of the new service call
      *                    that you want to start using.
      * @param clazz       The model that the current and new flow should be mapped to for comparison.
      * @param <C>         The type of collection to compare, for example a List
