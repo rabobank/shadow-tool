@@ -248,7 +248,7 @@ The following differences were found: firstName, lastName. Encrypted values: 6U8
 ## Inspecting the values of differences
 
 Values are encrypted using the public key that is set up during the configuration.
-The default algorithm for Public Key encryption is RSA with Electronic Codeblock mode (CBC) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
+The default algorithm for Public Key encryption is RSA with Electronic Codebook mode (ECB) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
 
 ### Example of decrypting values of differences
 

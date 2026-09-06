@@ -5,10 +5,10 @@ import org.bouncycastle.util.encoders.Base64;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * A version of the Encryption Service that doesn't perform any encryption,
- * it only encodes the differences as a Base 64 String.
+ * A version of the Encryption Service that doesn't perform any encryption.
+ * It only encodes the differences as a Base 64 String.
  * <p>
- * This might be useful for simple use-case where encryption of differences is not required,
+ * This might be useful for a simple use-case where encryption of differences is not required,
  * for example with public data.
  *
  * @see Base64#toBase64String(byte[])
