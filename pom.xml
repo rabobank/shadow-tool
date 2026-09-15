@@ -20,8 +20,8 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/rabobank/shadow-tool.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/rabobank/shadow-tool</developerConnection>
+        <connection>scm:git:https://github.com/rabobank/shadow-tool.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/rabobank/shadow-tool.git</developerConnection>
         <url>https://github.com/rabobank/shadow-tool</url>
         <tag>HEAD</tag>
     </scm>
