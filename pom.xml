@@ -232,6 +232,10 @@
                     <id>${distributionManagementRepositoryId}</id>
                     <url>${distributionManagementRepositoryUrl}</url>
                 </repository>
+                <snapshotRepository>
+                    <id>${distributionManagementSnapshotRepositoryId}</id>
+                    <url>${distributionManagementSnapshotRepositoryUrl}</url>
+                </snapshotRepository>
             </distributionManagement>
         </profile>
         <profile>
