@@ -1,6 +1,5 @@
 package io.github.rabobank.shadow_tool;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
@@ -9,6 +8,7 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -47,7 +47,7 @@ class EncryptionServiceTest {
         //Decrypt and verify
         final var decryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
         decryptCipher.init(DECRYPT_MODE, PRIVATE_KEY);
-        final var cipherText = decryptCipher.doFinal(Base64.decode(encryptedDifferences));
+        final var cipherText = decryptCipher.doFinal(Base64.getDecoder().decode(encryptedDifferences));
         final var result = new String(cipherText, UTF_8);
 
         assertEquals(plainDifferences, result);
@@ -89,7 +89,7 @@ class EncryptionServiceTest {
             final var decryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
             decryptCipher.init(DECRYPT_MODE, PRIVATE_KEY);
             for (int i = 0; i < messages.size(); i++) {
-                final var decrypted = decryptCipher.doFinal(Base64.decode(messages.get(i).get(5, SECONDS)));
+                final var decrypted = decryptCipher.doFinal(Base64.getDecoder().decode(messages.get(i).get(5, SECONDS)));
                 assertEquals("difference-" + i, new String(decrypted, UTF_8));
             }
         }
