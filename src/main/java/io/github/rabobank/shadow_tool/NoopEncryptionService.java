@@ -1,6 +1,6 @@
 package io.github.rabobank.shadow_tool;
 
-import org.bouncycastle.util.encoders.Base64;
+import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -11,7 +11,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * This might be useful for a simple use-case where encryption of differences is not required,
  * for example with public data.
  *
- * @see Base64#toBase64String(byte[])
+ * @see Base64.Encoder#encodeToString(byte[])
  */
 public class NoopEncryptionService implements EncryptionService {
     public static final NoopEncryptionService INSTANCE = new NoopEncryptionService();
@@ -21,6 +21,6 @@ public class NoopEncryptionService implements EncryptionService {
 
     @Override
     public String encrypt(final String value) {
-        return Base64.toBase64String(value.getBytes(UTF_8));
+        return Base64.getEncoder().encodeToString(value.getBytes(UTF_8));
     }
 }

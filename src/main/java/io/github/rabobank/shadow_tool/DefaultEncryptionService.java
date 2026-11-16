@@ -1,9 +1,8 @@
 package io.github.rabobank.shadow_tool;
 
-import org.bouncycastle.util.encoders.Base64;
-
 import javax.crypto.Cipher;
 import java.security.GeneralSecurityException;
+import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -22,7 +21,11 @@ public class DefaultEncryptionService implements EncryptionService {
     @Override
     public String encrypt(final String value) {
         try {
-            return Base64.toBase64String(cipher.doFinal(value.getBytes(UTF_8)));
+            final byte[] encrypted;
+            synchronized (cipher) {
+                encrypted = cipher.doFinal(value.getBytes(UTF_8));
+            }
+            return Base64.getEncoder().encodeToString(encrypted);
         } catch (final GeneralSecurityException e) {
             throw new SecurityException(e);
         }
