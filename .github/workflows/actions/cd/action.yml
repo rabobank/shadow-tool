@@ -38,10 +38,10 @@ runs:
       with:
         persist-credentials: false # use GITHUB_TOKEN, instead of personal token
         fetch-depth: 0 # otherwise, pushing refs to dest repo fails
-    - name: Set up JDK 17
+    - name: Set up JDK 25
       uses: actions/setup-java@v6.1.0
       with:
-        java-version: '17'
+        java-version: '25'
         distribution: 'temurin'
         cache: 'maven'
         server-id: central # Value of the distributionManagement/repository/id field of the pom.xml

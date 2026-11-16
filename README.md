@@ -4,6 +4,8 @@ This library allows you to safely test your migration from one back-end to anoth
 
 > This artifact contains the core Shadow Tool implementation only. If you are using Spring Boot, configure Shadow Tool via the **[Shadow Tool Spring Boot Starter](https://github.com/rabobank/shadow-tool-spring-boot-starter/)**: `io.github.rabobank.shadow_tool:shadow-tool-spring-boot-starter`.
 
+The core library requires Java 25 or later.
+
 The Shadow Tool can be easily integrated into your Java/Kotlin project and allows you to compare the current back-end
 service your application is using against the new back-end you plan on using.
 Since it actually runs in the production environment (in the background), it helps to ensure that:
@@ -44,188 +46,120 @@ implementation("io.github.rabobank:shadow-tool:$version") // Make sure to check 
 ## Getting started
 
 If you use Spring Boot, set up configuration via the [Shadow Tool Spring Boot Starter](https://github.com/rabobank/shadow-tool-spring-boot-starter/).
-The steps below show manual usage of the core implementation in this repository.
-
-1. **Important:** In order to see the differences in your logs, you have to add `slf4j-api` to your dependencies. By
-   default, only field names (keys) are logged when the values differ.
-   To see what exactly is different, encryption is required. Proceed to step 2 for setting up encryption.
-2. You have 3 encryption options:
-    1. **Noop encryption**: By setting up a `NoopEncryptionService`, the differences are logged as `Base64` encoded
-       text. This is not recommended for sensitive data.  
-       Example:
-       ```java
-       import io.github.rabobank.shadow_tool.ShadowFlow.ShadowFlowBuilder;
-
-       import java.util.List;
-       import java.util.function.Supplier;
-       
-       public class BackendService {
-       
-           public DummyObject callBackend() {
-               // Create a ShadowFlow instance with NoopEncryptionService
-               // The 10 means that for 10% of all requests, the `newBackend` is invoked as well and its response is compared against the `currentBackend` response.
-               ShadowFlowBuilder<Dummy> builder = new ShadowFlowBuilder<>(10);
-               ShadowFlow<Dummy> shadowFlow = builder.withEncryptionService(NoopEncryptionService.INSTANCE).build();
-       
-               // Define your current backend and new backend suppliers
-               Supplier<Dummy> currentBackend = () -> {
-                   // Your current backend logic here
-                   return new Dummy("Bob", "Utrecht", List.of("Mirabel", "Bruno"));
-               };
-       
-               Supplier<Dummy> newBackend = () -> {
-                   // Your new backend logic here
-                   return new Dummy("Bob", "Amsterdam", List.of("Bruno", "Mirabel", "Mirabel"));
-               };
-       
-               // The result is always from the first supplier. So in this case, the return value always yields the response of the `currentBackend` service.
-               return shadowFlow.compare(currentBackend, newBackend);
-           }
-       }
-       ```
-    2. **Cipher encryption**: The differences are logged as encrypted values. This is recommended for sensitive
-       data.
-       Example:
-       ```java
-       import io.github.rabobank.shadow_tool.ShadowFlow.ShadowFlowBuilder;
-
-       import javax.crypto.Cipher;
-       import java.security.GeneralSecurityException;
-       import java.util.List;
-       import java.util.function.Supplier;
-   
-       public class BackendService {
-   
-           public DummyObject callBackend() {
-               // Create a Cipher instance
-               Cipher cipher = null;
-               try {
-                   // The AES key (16, 24, or 32 bytes)
-                   final var keyBytes = Hex.decodeStrict("3d7e0c4f8fbbd8d8a79e76cabc8f4e24");
-                   final var secretKey = new SecretKeySpec(keyBytes, ALGORITHM);
-           
-                   // Initialization Vector (IV) for GCM
-                   final var iv = Hex.decodeStrict("3d7e0c4f8fbb"); // 96 bits IV
-                   if (iv.length != GCM_SIV_IV_SIZE) {
-                       throw new IllegalArgumentException("Initialization Vector should be 12 bytes / 96 bits");
-                   }
-           
-                   // Create AEADParameterSpec
-                   final var gcmParameterSpec = new GCMParameterSpec(MAC_SIZE_IN_BITS, iv);
-                   // Create Cipher instance with the specified algorithm and provider
-                   cipher = Cipher.getInstance(ALGORITHM_MODE);
-           
-                   // Initialize the Cipher for encryption or decryption
-                   cipher.init(ENCRYPT_MODE, secretKey, gcmParameterSpec);
-               } catch (GeneralSecurityException e) {
-                   // Handle exception
-               }
-   
-               // Create a ShadowFlow instance with DefaultEncryptionService
-               // The 10 means that for 10% of all requests, the `newBackend` is invoked as well and its response is compared against the `currentBackend` response.
-               ShadowFlow<Dummy> shadowFlow = new ShadowFlowBuilder<Dummy>(10).withCipher(cipher).build();
-   
-               // Define your current backend and new backend suppliers
-               Supplier<Dummy> currentBackend = () -> {
-                   // Your current backend logic here
-                   return new Dummy("Bob", "Utrecht", List.of("Mirabel", "Bruno"));
-               };
-   
-               Supplier<Dummy> newBackend = () -> {
-                   // Your new backend logic here
-                   return new Dummy("Bob", "Amsterdam", List.of("Bruno", "Mirabel", "Mirabel"));
-               };
-   
-               // The result is always from the first supplier. So in this case, the return value always yields the response of the `currentBackend` service.
-               return shadowFlow.compare(currentBackend, newBackend);
-           }
-       }
-       ```
-    3. **PublicKey encryption**: The differences are logged as encrypted values. This is recommended for sensitive data.
-       Example:
-        ```java
-       import io.github.rabobank.shadow_tool.ShadowFlow.ShadowFlowBuilder;
-
-       import java.security.KeyFactory;
-       import java.security.PublicKey;
-       import java.security.spec.X509EncodedKeySpec;
-       import java.util.Base64;
-       import java.util.List;
-       import java.util.function.Supplier;
-       
-       public class BackendService {
-       
-           public DummyObject callBackend() {
-               final PublicKey publicKey;
-               try {
-                   publicKey = KeyFactory.getInstance("RSA")
-                           .generatePublic(new X509EncodedKeySpec(Base64.decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArmkP2CgDn3OsuIj1GxM3")));
-               } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                   throw new RuntimeException(e);
-               }
-       
-               // Create a ShadowFlow instance with PublicKeyEncryptionService
-               // The 10 means that for 10% of all requests, the `newBackend` is invoked as well and its response is compared against the `currentBackend` response.
-               ShadowFlowBuilder<Dummy> builder = new ShadowFlowBuilder<>(10);
-               builder.withEncryption(publicKey);
-       
-               ShadowFlow<Dummy> shadowFlow = builder.build();
-       
-               // Define your current backend and new backend suppliers
-               Supplier<Dummy> currentBackend = () -> {
-                   // Your current backend logic here
-                   return new Dummy("Bob", "Utrecht", List.of("Mirabel", "Bruno"));
-               };
-       
-               Supplier<Dummy> newBackend = () -> {
-                   // Your new backend logic here
-                   return new Dummy("Bob", "Amsterdam", List.of("Bruno", "Mirabel", "Mirabel"));
-               };
-               // The result is always from the first supplier. So in this case, the return value always yields the response of the `currentBackend` service.
-               return shadowFlow.compare(currentBackend, newBackend);
-                  }
-           }       
-       ```
-3. To create a public and private (to decrypt) key, run the following command:
-   ```bash
-   openssl genrsa -out pair.pem 2048 && openssl rsa -in pair.pem -pubout -out public.key && openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in pair.pem -out private.key && rm -rf pair.pem
-   ```
-
-The shadow tool invokes both services asynchronously, so it will not have impact on the main flow performance-wise.
-Be aware that the more often the Shadow Tool runs, the more resources your application uses and back-ends are called.
-Be careful not to set this number too high for high-traffic applications.
-
-For a fair comparison, both services are required to return the same domain classes.
-In the example above, we called it `Dummy`.
-Also, since the secondary call is already mapped to the correct domain, completing the migration is straightforward:
-simply replace the first call with the secondary call and remove the Shadow Tool code.
-
-You can distinguish the results of multiple shadow flows running in your application by setting an instance name.
-This will be part of the log messages.
-
-#### Reactive
-
-The Shadow Tool also provides a reactive API based on Project Reactor.
+The following example shows manual use of the core library. For sampled requests, the new backend is called in the
+background; the method always returns the current backend's result.
 
 ```java
-class MyService {
-    // fields and constructor
+import io.github.rabobank.shadow_tool.ShadowFlow;
+import java.util.function.Supplier;
 
-    public Mono<Dummy> getDummy() {
+record Account(String name, String city) {}
+
+class AccountService {
+    private final ShadowFlow<Account> shadowFlow = new ShadowFlow.ShadowFlowBuilder<Account>(10).build();
+
+    Account getAccount() {
+        Supplier<Account> current = () -> currentBackend();
+        Supplier<Account> replacement = () -> replacementBackend();
+        return shadowFlow.compare(current, replacement);
+    }
+
+    private Account currentBackend() { return new Account("Bob", "Utrecht"); }
+    private Account replacementBackend() { return new Account("Bob", "Amsterdam"); }
+}
+```
+
+In this example, `10` means the replacement backend is called for approximately 10% of requests. Choose a percentage
+that your replacement backend can handle; the sampled calls add load to it and consume application resources.
+Both backends should map to the same domain type so their results can be compared.
+The current backend runs normally: its errors still propagate to the caller. Shadow failures are logged without
+replacing the current result. Use immutable response objects, as comparison happens after the current result is returned.
+
+By default, Shadow Tool logs changed property names but not their values. Logging requires an SLF4J implementation
+configured by your application. To inspect changed values, configure an encryption service:
+
+```java
+var shadowFlow = new ShadowFlow.ShadowFlowBuilder<Account>(10)
+        .withEncryption(publicKey)
+        .build();
+```
+
+`withEncryption` uses RSA with OAEP SHA-256; use an RSA public key of at least 2048 bits. Keep the matching
+private key outside the application so only authorized operators can decrypt log values. RSA has a strict limit on
+the amount of data it can encrypt; if comparisons can produce large diffs, supply an `EncryptionService` that uses
+authenticated hybrid encryption (a fresh symmetric key and nonce per message, with that key protected by RSA).
+For a 2048-bit RSA key with OAEP SHA-256, the entire formatted diff must fit within 190 UTF-8 bytes.
+
+For non-sensitive test data only, `NoopEncryptionService.INSTANCE` can be supplied with
+`withEncryptionService`; it Base64-encodes values but does not encrypt them. To implement a custom encryption
+strategy, provide a thread-safe `EncryptionService` using `withEncryptionService`. Do not share a mutable `Cipher`
+instance across concurrent calls.
+`withCipher` is also available for an initialized cipher whose algorithm supports repeated encryption calls;
+algorithms requiring a fresh nonce or IV for each message should be implemented as a custom `EncryptionService`.
+
+You can distinguish multiple Shadow Flow instances in logs with `withInstanceName("...")`.
+
+### Execution and virtual threads
+
+By default, shadow work uses Reactor's shared bounded-elastic scheduler. To choose another execution strategy,
+provide an executor with `withExecutor`. For example, Java's virtual-thread executor works with both APIs:
+
+```java
+try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+    var shadowFlow = new ShadowFlow.ShadowFlowBuilder<Account>(10)
+            .withExecutor(executor)
+            .build();
+    var result = shadowFlow.compare(
+            () -> new Account("Bob", "Utrecht"),
+            () -> new Account("Bob", "Amsterdam"));
+}
+```
+
+In an application, keep the executor and `ShadowFlow` alive for the service's lifetime, not just one request.
+You own the supplied executor and must close it at shutdown; closing it waits for submitted tasks.
+Virtual threads do not limit concurrency, so continue to sample conservatively to protect downstream services.
+No Java preview features or `--enable-preview` flags are required.
+
+### Collections
+
+Use `compareCollections` rather than `compare` for top-level lists, sets, or other collections:
+
+```java
+var accounts = shadowFlow.compareCollections(
+        () -> java.util.List.of(new Account("Bob", "Utrecht")),
+        () -> java.util.List.of(new Account("Bob", "Amsterdam")),
+        Account.class);
+```
+
+The same method supports `Mono` collections. The returned collection is always the current flow's collection.
+
+### Reactive
+
+The Shadow Tool also provides a reactive API based on Project Reactor.
+The returned `Mono` is the current flow; a sampled replacement flow is subscribed independently for comparison.
+Sampling is performed for each subscription. If the current flow is empty or fails, the replacement is not subscribed.
+Reactor context is forwarded to the replacement. Configure timeouts on backend publishers, as shadow subscriptions
+are independent and are not cancelled when the current request completes.
+
+```java
+import reactor.core.publisher.Mono;
+
+class MyService {
+    private final ShadowFlow<Account> shadowFlow = new ShadowFlow.ShadowFlowBuilder<Account>(10).build();
+
+    public Mono<Account> getAccount() {
         return shadowFlow.compare(
-                getDummyFromCurrent(),
-                getDummyFromNew()
+                getAccountFromCurrent(),
+                getAccountFromNew()
         );
     }
 
-    private Mono<Dummy> getDummyFromCurrent() {
-        return yourCurrentBackend.getDummMono()
-                .map(...);
+    private Mono<Account> getAccountFromCurrent() {
+        return Mono.fromSupplier(() -> new Account("Bob", "Utrecht"));
     }
 
-    private Mono<AccountInfo> getDummyFromNew() {
-        return yourNewBackend.getDummyMono()
-                .map(...);
+    private Mono<Account> getAccountFromNew() {
+        return Mono.fromSupplier(() -> new Account("Bob", "Amsterdam"));
     }
 } 
 ```
@@ -233,8 +167,8 @@ class MyService {
 ## Logs
 
 The Shadow Tool logs any differences it finds between the two flows.
-It always logs the field names of the objects containing the differences,
-and it can also log the values when encryption is set up.
+At INFO level it logs changed property names, or change types such as `NewObject` for object-level changes.
+It can also log the values when encryption is set up.
 You can expect output similar to the following:
 
 ```
@@ -247,19 +181,7 @@ The following differences were found: firstName, lastName. Encrypted values: 6U8
 
 ## Inspecting the values of differences
 
-Values are encrypted using the public key that is set up during the configuration.
-The default algorithm for Public Key encryption is RSA with Electronic Codebook mode (ECB) and `OAEPWITHSHA-256ANDMGF1PADDING` padding.
-
-### Example of decrypting values of differences
-
-Here's an example decrypting the encrypted values using a Cipher (key and iv):
-```bash
-encrypted_text="6U8H2WSpEoXY1cFDS2Ze/63ohRVIS4t3A4I5E3RJeemrqXTWEUN6BlTawMVgyjQri9t8l6t9jotJmIEQOoc++C9W38Z8mYEAzU2UzvGm50AMcFqEXheSBEw7c3LZFRoE"
-key="2d4a75512e73b8761400b49aff747af368a18de82d3865fe597efaf6d11053f9"
-iv="ebc3a59998fe444066b5fd819578d564"
-echo -n $encrypted_text | openssl enc -d -aes-256-cbc -base64 -nosalt -A -K $key -iv $iv
-'firstName' changed: 'terry' -> 'Terry'
-'lastName' changed: 'pratchett' -> 'Pratchett'
-```
-
-Or you can find an example in one of the tests: [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java).
+The configured encryption service encrypts the formatted diff as a whole. With `withEncryption`, decrypt the Base64
+value using the corresponding RSA private key and OAEP SHA-256. For custom encryption, use the matching decryption
+procedure for that service. The [EncryptionServiceTest](src/test/java/io/github/rabobank/shadow_tool/EncryptionServiceTest.java)
+demonstrates decrypting a value produced by the built-in public-key service.
