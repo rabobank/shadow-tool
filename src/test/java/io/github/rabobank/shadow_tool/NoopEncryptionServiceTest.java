@@ -1,7 +1,8 @@
 package io.github.rabobank.shadow_tool;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
+
+import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,7 +18,7 @@ class NoopEncryptionServiceTest {
                    0. 'Bruno' added""";
         final var encryptedDifferences = encryptionService.encrypt(plainDifferences);
         //Decrypt and verify
-        final var decoded = Base64.decode(encryptedDifferences);
+        final var decoded = Base64.getDecoder().decode(encryptedDifferences);
         final var result = new String(decoded, UTF_8);
 
         assertEquals(plainDifferences, result);
