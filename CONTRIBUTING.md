@@ -32,8 +32,6 @@ To also build the `-all.jar` with bundled runtime dependencies (your application
 mvn verify -Pfat-jar
 ```
 
-Azure build agents must have JDK 25 preinstalled and discoverable by `JavaToolInstaller`.
-
 Installing the jar in your local maven repository:
 
 ```shell
