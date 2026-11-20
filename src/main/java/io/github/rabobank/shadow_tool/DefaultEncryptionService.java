@@ -21,11 +21,7 @@ public class DefaultEncryptionService implements EncryptionService {
     @Override
     public String encrypt(final String value) {
         try {
-            final byte[] encrypted;
-            synchronized (cipher) {
-                encrypted = cipher.doFinal(value.getBytes(UTF_8));
-            }
-            return Base64.getEncoder().encodeToString(encrypted);
+            return Base64.getEncoder().encodeToString(cipher.doFinal(value.getBytes(UTF_8)));
         } catch (final GeneralSecurityException e) {
             throw new SecurityException(e);
         }
