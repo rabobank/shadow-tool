@@ -16,9 +16,10 @@ import javax.crypto.Cipher;
 import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.joining;
@@ -50,16 +51,13 @@ public class ShadowFlow<T> {
                final String instanceName) {
         this.percentage = percentage;
         this.encryptionService = encryptionService;
-        this.instanceName = instanceName == null ? DEFAULT_INSTANCE_NAME : instanceName;
-        instanceNameLogPrefix = String.format(INSTANCE_PREFIX_FORMAT, this.instanceName);
-
-        if (executor != null) {
-            this.executor = executor;
-            scheduler = Schedulers.fromExecutor(executor);
-        } else {
-            this.executor = Executors.newCachedThreadPool();
-            scheduler = Schedulers.boundedElastic();
-        }
+        this.instanceName = Objects.requireNonNullElse(instanceName, DEFAULT_INSTANCE_NAME);
+        instanceNameLogPrefix = INSTANCE_PREFIX_FORMAT.formatted(this.instanceName);
+        this.executor = executor;
+        scheduler = switch (executor) {
+            case null -> Schedulers.boundedElastic();
+            default -> Schedulers.fromExecutor(executor);
+        };
     }
 
 
@@ -133,20 +131,7 @@ public class ShadowFlow<T> {
      * @return This will always return the mono of currentFlow.
      */
     public Mono<T> compare(final Mono<T> currentFlow, final Mono<T> newFlow) {
-        final var callNewFlow = shouldCallNewFlow();
-
-        return Mono.deferContextual(contextView ->
-                currentFlow.doOnNext(currentResponse -> {
-                    logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
-                    if (callNewFlow) {
-                        newFlow.doOnNext(newResponse -> logDifferences(JAVERS.compare(currentResponse, newResponse)))
-                                .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
-                                .onErrorStop()
-                                .contextWrite(contextView)
-                                .subscribeOn(scheduler)
-                                .subscribe();
-                    }
-                }));
+        return compareReactive(currentFlow, newFlow, JAVERS::compare);
     }
 
     /**
@@ -166,20 +151,26 @@ public class ShadowFlow<T> {
      * @return This will always return the mono of currentFlow.
      */
     public <C extends Collection<T>> Mono<C> compareCollections(final Mono<? extends C> currentFlow, final Mono<? extends C> newFlow, final Class<T> clazz) {
-        final var callNewFlow = shouldCallNewFlow();
+        return compareReactive(currentFlow, newFlow,
+                (currentResponse, newResponse) -> JAVERS.compareCollections(currentResponse, newResponse, clazz));
+    }
 
-        return Mono.deferContextual(contextView ->
-                currentFlow.doOnNext(currentResponse -> {
-                    logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
-                    if (callNewFlow) {
-                        newFlow.doOnNext(newResponse -> logDifferences(JAVERS.compareCollections(currentResponse, newResponse, clazz)))
-                                .doOnError(ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex))
-                                .onErrorStop()
-                                .contextWrite(contextView)
-                                .subscribeOn(scheduler)
-                                .subscribe();
-                    }
-                }));
+    private <R> Mono<R> compareReactive(final Mono<? extends R> currentFlow,
+                                       final Mono<? extends R> newFlow,
+                                       final BiFunction<R, R, Diff> comparison) {
+        return Mono.deferContextual(contextView -> {
+            final var callNewFlow = shouldCallNewFlow();
+            return Mono.<R>from(currentFlow).doOnNext(currentResponse -> {
+                logger.info(CALLING_NEW_FLOW, instanceNameLogPrefix, callNewFlow);
+                if (callNewFlow) {
+                    newFlow.doOnNext(newResponse -> logDifferences(comparison.apply(currentResponse, newResponse)))
+                            .onErrorStop()
+                            .contextWrite(contextView)
+                            .subscribeOn(scheduler)
+                            .subscribe(_ -> {}, ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex));
+                }
+            });
+        });
     }
 
     private void doShadowFlow(final Supplier<Diff> diffSupplier) {
@@ -189,7 +180,12 @@ public class ShadowFlow<T> {
 
         if (callNewFlow) {
             try {
-                executor.execute(() -> logDifferenceWithMdc(diffSupplier, contextMap));
+                final Runnable task = () -> logDifferenceWithMdc(diffSupplier, contextMap);
+                if (executor != null) {
+                    executor.execute(task);
+                } else {
+                    scheduler.schedule(task);
+                }
             } catch (final Exception e) {
                 logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, e);
             }
@@ -197,33 +193,43 @@ public class ShadowFlow<T> {
     }
 
     private void logDifferenceWithMdc(final Supplier<Diff> diffSupplier, final Map<String, String> contextMap) {
-        if (contextMap != null) MDC.setContextMap(contextMap);
+        final var previousContextMap = MDC.getCopyOfContextMap();
         try {
+            if (contextMap == null) {
+                MDC.clear();
+            } else {
+                MDC.setContextMap(contextMap);
+            }
             logDifferences(diffSupplier.get());
         } catch (final Exception e) {
             logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, e);
         } finally {
-            MDC.clear();
+            if (previousContextMap == null) {
+                MDC.clear();
+            } else {
+                MDC.setContextMap(previousContextMap);
+            }
         }
     }
 
     private void logDifferences(final Diff differences) {
-        if (differences.hasChanges()) {
+        if (differences.hasChanges() && logger.isInfoEnabled()) {
             final var propertyNames = differences.getChanges().stream()
-                    .map(change -> ((PropertyChange<?>) change).getPropertyName())
+                    .map(change -> switch (change) {
+                        case PropertyChange<?> propertyChange -> propertyChange.getPropertyName();
+                        default -> change.getClass().getSimpleName();
+                    })
                     .collect(joining(", "));
 
-            if (logger.isInfoEnabled()) { // This is mostly to ensure that we do not encrypt needlessly
-                if (encryptionService != null) {
-                    final var values = differences.getChanges().stream()
-                            .map(change -> change.prettyPrint(PrettyValuePrinter.getDefault()))
-                            .collect(joining("\n"));
+            if (encryptionService != null) {
+                final var values = differences.getChanges().stream()
+                        .map(change -> change.prettyPrint(PrettyValuePrinter.getDefault()))
+                        .collect(joining("\n"));
 
-                    final var encryptedValues = encryptionService.encrypt(values);
-                    logger.info("{} The following differences were found: {}. Encrypted values: {}", instanceNameLogPrefix, propertyNames, encryptedValues);
-                } else {
-                    logger.info("{} The following differences were found: {}", instanceNameLogPrefix, propertyNames);
-                }
+                final var encryptedValues = encryptionService.encrypt(values);
+                logger.info("{} The following differences were found: {}. Encrypted values: {}", instanceNameLogPrefix, propertyNames, encryptedValues);
+            } else {
+                logger.info("{} The following differences were found: {}", instanceNameLogPrefix, propertyNames);
             }
         }
     }
@@ -238,7 +244,7 @@ public class ShadowFlow<T> {
     public static class ShadowFlowBuilder<T> {
 
         private final Logger logger = LoggerFactory.getLogger(ShadowFlowBuilder.class);
-        private static final IllegalStateException ENCRYPTION_SERVICE_ALREADY_CONFIGURED = new IllegalStateException("An encryption service has already been configured");
+        private static final String ENCRYPTION_SERVICE_ALREADY_CONFIGURED = "An encryption service has already been configured";
 
         private final int percentage;
 
@@ -265,7 +271,7 @@ public class ShadowFlow<T> {
          * @param executor The {@link Executor} which will be used to ensure that the second service call and the
          *                        comparing mechanism is executed on a different thread. This ensures that the main flow
          *                        will not be impacted by the new flow.
-         *                        By default, {@link Executors#newCachedThreadPool()} will be used.
+         *                        By default, Reactor's bounded elastic scheduler is used.
          * @return This builder
          */
         public ShadowFlowBuilder<T> withExecutor(final Executor executor) {
@@ -320,17 +326,13 @@ public class ShadowFlow<T> {
          */
         public ShadowFlowBuilder<T> withEncryptionService(final EncryptionService encryptionService) {
             requireNull();
-            try {
-                this.encryptionService = encryptionService;
-            } catch (final Exception e) {
-                logger.error("Invalid encryption setup. Encryption and logging of values is disabled", e);
-            }
+            this.encryptionService = encryptionService;
             return this;
         }
 
         private void requireNull() {
             if (encryptionService != null) {
-                throw ENCRYPTION_SERVICE_ALREADY_CONFIGURED;
+                throw new IllegalStateException(ENCRYPTION_SERVICE_ALREADY_CONFIGURED);
             }
         }
 

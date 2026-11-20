@@ -16,7 +16,7 @@ an issue in GitHub. When creating an issue you can follow below steps:
 ### Requirements
 
 - Maven
-- Java JDK 11
+- Java JDK 25
 
 ### Building
 
@@ -24,6 +24,12 @@ Compiling and running the tests:
 
 ```shell
 mvn verify
+```
+
+To also build the `-all.jar` with bundled runtime dependencies (your application still supplies SLF4J):
+
+```shell
+mvn verify -Pfat-jar
 ```
 
 Installing the jar in your local maven repository:

@@ -1,6 +1,5 @@
 package io.github.rabobank.shadow_tool;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
@@ -8,6 +7,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.crypto.Cipher.DECRYPT_MODE;
@@ -42,7 +42,7 @@ class EncryptionServiceTest {
         //Decrypt and verify
         final var decryptCipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
         decryptCipher.init(DECRYPT_MODE, PRIVATE_KEY);
-        final var cipherText = decryptCipher.doFinal(Base64.decode(encryptedDifferences));
+        final var cipherText = decryptCipher.doFinal(Base64.getDecoder().decode(encryptedDifferences));
         final var result = new String(cipherText, UTF_8);
 
         assertEquals(plainDifferences, result);
