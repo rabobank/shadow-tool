@@ -16,7 +16,7 @@ an issue in GitHub. When creating an issue you can follow below steps:
 ### Requirements
 
 - Maven
-- Java JDK 25
+- Java JDK 21
 
 ### Building
 

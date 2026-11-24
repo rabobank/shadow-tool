@@ -4,7 +4,7 @@ This library allows you to safely test your migration from one back-end to anoth
 
 > This artifact contains the core Shadow Tool implementation only. If you are using Spring Boot, configure Shadow Tool via the **[Shadow Tool Spring Boot Starter](https://github.com/rabobank/shadow-tool-spring-boot-starter/)**: `io.github.rabobank.shadow_tool:shadow-tool-spring-boot-starter`.
 
-The core library requires Java 25 or later.
+The core library requires Java 21 or later.
 
 The Shadow Tool can be easily integrated into your Java/Kotlin project and allows you to compare the current back-end
 service your application is using against the new back-end you plan on using.
