@@ -167,7 +167,7 @@ public class ShadowFlow<T> {
                             .onErrorStop()
                             .contextWrite(contextView)
                             .subscribeOn(scheduler)
-                            .subscribe(_ -> {}, ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex));
+                            .subscribe(ignored -> {}, ex -> logger.warn(FAILED_TO_COMPARE, instanceNameLogPrefix, ex));
                 }
             });
         });

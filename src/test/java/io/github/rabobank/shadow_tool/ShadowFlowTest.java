@@ -161,7 +161,7 @@ class ShadowFlowTest {
                     return dummyObjectB;
                 }));
 
-        IntStream.range(0, 1000).forEach(_ -> comparison.block());
+        IntStream.range(0, 1000).forEach(ignored -> comparison.block());
 
         assertTrue(calls.get() >= 400 && calls.get() <= 600, () -> "Shadow calls: " + calls.get());
     }
